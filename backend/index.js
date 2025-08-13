@@ -11,7 +11,11 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ["https://juassevote-api.onrender.com", "http://localhost:5173"],
+    origin: [
+      "https://juassevote-api.onrender.com",
+      "http://localhost:5173",
+      "https://juass-evoting.onrender.com",
+    ],
   })
 );
 app.use(express.json());
