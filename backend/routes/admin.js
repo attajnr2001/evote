@@ -10,7 +10,7 @@ const router = express.Router();
 
 const uploadsDir = path.join(__dirname, "../Uploads");
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(UploadsDir, { recursive: true });
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Multer configuration
