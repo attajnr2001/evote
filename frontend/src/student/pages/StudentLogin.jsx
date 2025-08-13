@@ -7,7 +7,7 @@ const StudentLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const BACKEND_URL = "https://juassevote-api.onrender.com";
+  const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   const handleLogin = async () => {
     setLoading(true);
@@ -55,7 +55,7 @@ const StudentLogin = () => {
           alt="JUASS School Badge"
           className="w-32 h-32 mx-auto mb-4 object-contain"
         />
-        <h1 className="text-3xl md:text-4xl font-bold text-blue-800">
+        <h1 className="text-3xl md:text-4xl font-bold text-green-800">
           JUASS EVoting - Student Login
         </h1>
         <p className="text-lg md:text-xl text-gray-600 mt-2">
@@ -79,7 +79,7 @@ const StudentLogin = () => {
             type="text"
             id="studentId"
             placeholder="Enter your Student ID"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
             disabled={loading}

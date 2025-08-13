@@ -25,7 +25,7 @@ const ViewResults = () => {
   const [results, setResults] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const BACKEND_URL = "https://juassevote-api.onrender.com";
+  const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -62,7 +62,7 @@ const ViewResults = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar-like Header */}
-      <div className="w-full md:w-64 bg-blue-800 text-white p-6 flex flex-col items-center">
+      <div className="w-full md:w-64 bg-green-800 text-white p-6 flex flex-col items-center">
         <img
           src={schLogo}
           alt="JUASS School Badge"
@@ -74,7 +74,7 @@ const ViewResults = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-6">
-        <h1 className="text-3xl font-bold text-blue-800 mb-6 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-green-800 mb-6 flex items-center gap-2">
           <BarChart />
           Election Results
         </h1>
@@ -124,7 +124,7 @@ const ViewResults = () => {
                       </p>
                       <p className="text-sm text-gray-600">
                         Votes:{" "}
-                        <span className="font-bold text-blue-600">
+                        <span className="font-bold text-green-600">
                           {candidate.votes}
                         </span>
                       </p>

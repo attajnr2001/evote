@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { PersonAdd } from "@mui/icons-material";
 import schLogo from "/logo.jpg";
 
@@ -34,6 +35,7 @@ const AddCandidate = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,13 +65,10 @@ const AddCandidate = () => {
     }
 
     try {
-      const response = await fetch(
-        "https://juassevote-api.onrender.com/api/admins/add-candidate",
-        {
-          method: "POST",
-          body: data,
-        }
-      );
+      const response = await fetch(`${BACKEND_URL}/api/admins/add-candidate`, {
+        method: "POST",
+        body: data,
+      });
 
       const result = await response.json();
 
@@ -86,35 +85,108 @@ const AddCandidate = () => {
     }
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const buttonVariants = {
+    hover: {
+      scale: 1.05,
+      boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+      transition: { duration: 0.3 },
+    },
+    tap: { scale: 0.95 },
+  };
+
+  const errorVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  };
+
+  const imageVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar-like Header */}
-      <div className="w-full md:w-64 bg-blue-800 text-white p-6 flex flex-col items-center">
-        <img
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      <motion.div
+        className="w-full md:w-72 bg-green-900 text-white p-6 flex flex-col items-center"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.img
           src={schLogo}
           alt="JUASS School Badge"
-          className="w-24 h-24 mb-4 object-contain"
+          className="w-28 h-28 mb-6 object-contain rounded-full shadow-lg"
+          variants={itemVariants}
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          transition={{ duration: 0.3 }}
         />
-        <h1 className="text-2xl font-bold">JUASS EVoting</h1>
-        <p className="text-sm mt-2">Add Candidate</p>
-      </div>
+        <motion.h1
+          className="text-3xl font-extrabold tracking-tight"
+          variants={itemVariants}
+        >
+          JUASS EVoting
+        </motion.h1>
+        <motion.p
+          className="text-sm mt-2 text-gray-200"
+          variants={itemVariants}
+        >
+          Add Candidate
+        </motion.p>
+      </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
-        <h1 className="text-3xl font-bold text-blue-800 mb-6">
+      <motion.div
+        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-green-50"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.h1
+          className="text-4xl sm:text-5xl font-extrabold text-green-900 tracking-tight mb-6"
+          variants={itemVariants}
+        >
           Add New Candidate
-        </h1>
+        </motion.h1>
 
         {/* Form */}
-        <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+        <motion.div
+          className="max-w-lg mx-auto bg-white p-8 rounded-xl shadow-lg"
+          variants={itemVariants}
+        >
           {error && (
-            <div className="mb-4 text-red-600 text-sm text-center">{error}</div>
+            <motion.div
+              className="mb-4 text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg"
+              variants={errorVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {error}
+            </motion.div>
           )}
           <form onSubmit={handleSubmit}>
-            <div className="mb-4">
+            <div className="mb-5">
               <label
                 htmlFor="idNumber"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-800 text-sm font-semibold mb-2"
               >
                 Student ID Number
               </label>
@@ -123,17 +195,17 @@ const AddCandidate = () => {
                 id="idNumber"
                 name="idNumber"
                 placeholder="Enter student ID number"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
                 value={formData.idNumber}
                 onChange={handleInputChange}
                 disabled={loading}
                 required
               />
             </div>
-            <div className="mb-4">
+            <div className="mb-5">
               <label
                 htmlFor="name"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-800 text-sm font-semibold mb-2"
               >
                 Name
               </label>
@@ -142,24 +214,24 @@ const AddCandidate = () => {
                 id="name"
                 name="name"
                 placeholder="Enter candidate name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
                 value={formData.name}
                 onChange={handleInputChange}
                 disabled={loading}
                 required
               />
             </div>
-            <div className="mb-4">
+            <div className="mb-5">
               <label
                 htmlFor="position"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-800 text-sm font-semibold mb-2"
               >
                 Position
               </label>
               <select
                 id="position"
                 name="position"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
                 value={formData.position}
                 onChange={handleInputChange}
                 disabled={loading}
@@ -173,10 +245,10 @@ const AddCandidate = () => {
                 ))}
               </select>
             </div>
-            <div className="mb-4">
+            <div className="mb-5">
               <label
                 htmlFor="year"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-800 text-sm font-semibold mb-2"
               >
                 Year
               </label>
@@ -185,17 +257,17 @@ const AddCandidate = () => {
                 id="year"
                 name="year"
                 placeholder="Enter year (e.g., 2025)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
                 value={formData.year}
                 onChange={handleInputChange}
                 disabled={loading}
                 required
               />
             </div>
-            <div className="mb-4">
+            <div className="mb-5">
               <label
                 htmlFor="image"
-                className="block text-gray-700 text-sm font-bold mb-2"
+                className="block text-gray-800 text-sm font-semibold mb-2"
               >
                 Candidate Image
               </label>
@@ -204,37 +276,48 @@ const AddCandidate = () => {
                 id="image"
                 name="image"
                 accept="image/jpeg,image/png"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
                 onChange={handleImageChange}
                 disabled={loading}
                 required
               />
             </div>
             {imagePreview && (
-              <div className="mb-4 flex justify-center">
+              <motion.div
+                className="mb-6 flex justify-center"
+                variants={imageVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 <img
                   src={imagePreview}
                   alt="Candidate Preview"
-                  className="w-64 h-64 object-cover rounded-lg shadow-md"
+                  className="w-64 h-64 object-cover rounded-xl shadow-lg"
                 />
-              </div>
+              </motion.div>
             )}
-            <button
+            <motion.button
               type="submit"
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300 disabled:bg-green-400 flex items-center justify-center gap-2"
+              className="w-full bg-green-700 text-white py-3 px-4 rounded-full font-semibold text-lg hover:bg-green-800 transition duration-300 shadow-md disabled:bg-green-400 flex items-center justify-center gap-2"
               disabled={loading}
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               <PersonAdd />
               {loading ? "Adding Candidate..." : "Add Candidate"}
-            </button>
+            </motion.button>
           </form>
-        </div>
+        </motion.div>
 
         {/* Footer */}
-        <footer className="mt-12 text-gray-500 text-sm text-center">
+        <motion.footer
+          className="mt-12 text-gray-600 text-sm sm:text-base text-center"
+          variants={itemVariants}
+        >
           &copy; {new Date().getFullYear()} JUASS EVoting. All rights reserved.
-        </footer>
-      </div>
+        </motion.footer>
+      </motion.div>
     </div>
   );
 };

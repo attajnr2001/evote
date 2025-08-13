@@ -28,7 +28,7 @@ const Vote = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const BACKEND_URL = "https://juassevote-api.onrender.com";
+  const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -122,7 +122,7 @@ const Vote = () => {
   return (
     <div className="bg-gray-100">
       {/* Header */}
-      <div className="text-center py-8 bg-blue-800 text-white">
+      <div className="text-center py-8 bg-green-800 text-white">
         <img
           src={schLogo}
           alt="JUASS School Badge"
@@ -158,8 +158,8 @@ const Vote = () => {
             id={position.toLowerCase().replace(/\s+/g, "-")}
             className="min-h-screen flex flex-col items-center justify-center p-4"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-blue-800 mb-8">
-              Vote for {position}
+            <h2 className="text-2xl md:text-3xl font-bold text-green-800 mb-8">
+              {position}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl w-full">
               {candidates[position].map((candidate) => (
@@ -188,7 +188,7 @@ const Vote = () => {
                       value={candidate.id}
                       checked={selections[position] === candidate.id}
                       onChange={() => handleSelection(position, candidate.id)}
-                      className="h-5 w-5 text-blue-600"
+                      className="h-5 w-5 text-green-600"
                     />
                     <span className="text-gray-700">Select</span>
                   </label>
@@ -202,7 +202,7 @@ const Vote = () => {
                     validPositions[index + 1].toLowerCase().replace(/\s+/g, "-")
                   )
                 }
-                className="mt-8 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300"
+                className="mt-8 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300"
               >
                 Next: {validPositions[index + 1]}
               </button>

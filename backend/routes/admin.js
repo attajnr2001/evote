@@ -154,15 +154,125 @@ router.get("/results", async (req, res) => {
       }
       groupedResults[candidate.position].push({
         id: candidate._id,
+        idNumber: candidate.idNumber,
         name: candidate.name,
         image: candidate.image,
         votes: candidate.votes,
+        position: candidate.position,
+        year: candidate.year,
       });
     });
 
     res.status(200).json(groupedResults);
   } catch (error) {
     console.error("Error fetching results:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/candidate/:id", async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+    res.status(200).json({
+      id: candidate._id,
+      idNumber: candidate.idNumber,
+      name: candidate.name,
+      position: candidate.position,
+      year: candidate.year,
+      image: candidate.image,
+      votes: candidate.votes,
+    });
+  } catch (error) {
+    console.error("Error fetching candidate:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/update-candidate", upload.single("image"), async (req, res) => {
+  try {
+    const { idNumber, name, position, year } = req.body;
+    const image = req.file;
+
+    // Validate input
+    if (!idNumber || !name || !position || !year) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Find candidate by ID
+    const candidate = await Candidate.findById(req.body.id);
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    // Check if another candidate exists with the same idNumber and position
+    const existingCandidate = await Candidate.findOne({
+      idNumber,
+      position,
+      _id: { $ne: req.body.id },
+    });
+    if (existingCandidate) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Another candidate already exists for this position with the same ID number",
+        });
+    }
+
+    // Update candidate fields
+    candidate.idNumber = idNumber;
+    candidate.name = name;
+    candidate.position = position;
+    candidate.year = year;
+    if (image) {
+      // Delete old image if it exists
+      const oldImagePath = path.join(__dirname, "../", candidate.image);
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+      candidate.image = `/Uploads/${image.filename}`;
+    }
+
+    // Save updated candidate
+    await candidate.save();
+
+    res.status(200).json({ message: "Candidate updated successfully" });
+  } catch (error) {
+    console.error("Error updating candidate:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+});
+
+router.delete("/delete-candidate", async (req, res) => {
+  try {
+    const { candidateId } = req.body;
+
+    // Validate input
+    if (!candidateId) {
+      return res.status(400).json({ message: "Candidate ID is required" });
+    }
+
+    // Find candidate
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    // Delete candidate
+    await Candidate.deleteOne({ _id: candidateId });
+
+    // Delete image file
+    const imagePath = path.join(__dirname, "../", candidate.image);
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    res.status(200).json({ message: "Candidate deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting candidate:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
