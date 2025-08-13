@@ -15,13 +15,16 @@ const AdminLogin = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3000/api/admins/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "https://juassevote-api.onrender.com/api/admins/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 

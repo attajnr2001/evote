@@ -64,7 +64,7 @@ const AddCandidate = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/admins/add-candidate",
+        "https://juassevote-api.onrender.com/api/admins/add-candidate",
         {
           method: "POST",
           body: data,

@@ -28,7 +28,7 @@ const Vote = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const BACKEND_URL = "http://localhost:3000";
+  const BACKEND_URL = "https://juassevote-api.onrender.com";
 
   useEffect(() => {
     const fetchCandidates = async () => {
