@@ -12,15 +12,12 @@ const app = express();
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://juass-evoting.onrender.com"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type"],
   })
 );
-
 app.use(express.json());
 
 // Serve static files (for images)
-app.use("/uploads", express.static(path.join(__dirname, "Uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Connect to MongoDB
 if (!process.env.MONGO_URL) {

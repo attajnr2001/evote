@@ -8,7 +8,7 @@ const Student = require("../models/Student");
 const Candidate = require("../models/Candidate");
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, "Uploads");
+const uploadsDir = path.join(__dirname, "../Uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -106,7 +106,6 @@ router.post("/add-candidate", upload.single("image"), async (req, res) => {
   try {
     const { idNumber, name, position, year } = req.body;
     const image = req.file;
-    console.log("Received file:", image ? image.filename : "No file");
 
     // Validate input
     if (!idNumber || !name || !position || !year || !image) {

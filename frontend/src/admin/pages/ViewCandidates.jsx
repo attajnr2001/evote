@@ -35,35 +35,33 @@ const ViewCandidates = () => {
   const [candidates, setCandidates] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [imageLoading, setImageLoading] = useState({});
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
-  const fetchCandidates = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/admins/results`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch candidates");
-      }
-
-      setCandidates(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/admins/results`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch candidates");
+        }
+
+        setCandidates(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCandidates();
   }, [BACKEND_URL]);
 
@@ -89,7 +87,21 @@ const ViewCandidates = () => {
         throw new Error(data.message || "Failed to delete candidate");
       }
 
-      await fetchCandidates();
+      // Refresh candidates list
+      const updatedResponse = await fetch(`${BACKEND_URL}/api/admins/results`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const updatedData = await updatedResponse.json();
+
+      if (!updatedResponse.ok) {
+        throw new Error(updatedData.message || "Failed to refresh candidates");
+      }
+
+      setCandidates(updatedData);
       alert("Candidate deleted successfully");
     } catch (err) {
       setError(err.message);
@@ -118,7 +130,21 @@ const ViewCandidates = () => {
         throw new Error(data.message || "Failed to reset votes");
       }
 
-      await fetchCandidates();
+      // Refresh candidates list
+      const updatedResponse = await fetch(`${BACKEND_URL}/api/admins/results`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const updatedData = await updatedResponse.json();
+
+      if (!updatedResponse.ok) {
+        throw new Error(updatedData.message || "Failed to refresh candidates");
+      }
+
+      setCandidates(updatedData);
       alert("All candidate votes reset successfully");
     } catch (err) {
       setError(err.message);
@@ -127,8 +153,10 @@ const ViewCandidates = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
+
+    // Add header
     doc.setFontSize(18);
-    doc.setTextColor(22, 163, 74); // Green color
+    doc.setTextColor(22, 163, 74); // violet color to match theme
     doc.text("JUASS EVoting - Candidate List", 14, 22);
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -139,6 +167,7 @@ const ViewCandidates = () => {
       38
     );
 
+    // Prepare table data
     const tableHeaders = ["ID Number", "Name", "Position", "Year", "Votes"];
     const tableData = Object.keys(candidates)
       .sort((a, b) => positions.indexOf(a) - positions.indexOf(b))
@@ -152,25 +181,28 @@ const ViewCandidates = () => {
         ])
       );
 
+    // Create table
     autoTable(doc, {
       head: [tableHeaders],
       body: tableData,
       startY: 45,
       styles: { fontSize: 8, cellPadding: 3 },
       headStyles: {
-        fillColor: [22, 163, 74], // Green header
-        textColor: [255, 255, 255],
+        fillColor: [22, 163, 74], // violet header
+        textColor: [255, 255, 255], // White text
         fontStyle: "bold",
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245],
+        fillColor: [245, 245, 245], // Light gray for alternating rows
       },
       margin: { top: 45 },
     });
 
+    // Save PDF
     doc.save(`Candidates_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
+  // Flatten candidates for table and sort by position
   const allCandidates = Object.keys(candidates)
     .sort((a, b) => positions.indexOf(a) - positions.indexOf(b))
     .flatMap((position) => candidates[position])
@@ -178,6 +210,7 @@ const ViewCandidates = () => {
       (a, b) => positions.indexOf(a.position) - positions.indexOf(b.position)
     );
 
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -220,8 +253,9 @@ const ViewCandidates = () => {
 
   return (
     <div className="min-h-screen flex">
+      {/* Sidebar */}
       <motion.div
-        className="w-full md:w-72 bg-green-900 text-white p-6 flex flex-col items-center"
+        className="w-full md:w-72 bg-violet-900 text-white p-6 flex flex-col items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -248,24 +282,25 @@ const ViewCandidates = () => {
         </motion.p>
       </motion.div>
 
+      {/* Main Content */}
       <motion.div
-        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-green-50"
+        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-orange-50 via-white to-violet-50"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex justify-between items-center mb-6">
           <motion.h1
-            className="text-4xl sm:text-5xl font-extrabold text-green-900 tracking-tight flex items-center gap-2"
+            className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight flex items-center gap-2"
             variants={itemVariants}
           >
             <Person />
             Candidate List
           </motion.h1>
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <motion.button
               onClick={handleExportPDF}
-              className="bg-green-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
+              className="bg-violet-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
@@ -281,11 +316,12 @@ const ViewCandidates = () => {
               whileTap="tap"
             >
               <Refresh />
-              Reset Votes
+              Reset All Votes
             </motion.button>
           </div>
         </div>
 
+        {/* Error or Loading State */}
         {loading && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -304,6 +340,8 @@ const ViewCandidates = () => {
             {error}
           </motion.div>
         )}
+
+        {/* Candidates Table */}
         {!loading && !error && allCandidates.length === 0 && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -314,13 +352,13 @@ const ViewCandidates = () => {
         )}
         {!loading && !error && allCandidates.length > 0 && (
           <motion.div
-            className="overflow-x-auto"
+            className="overflow-x-auto rounded-xl shadow-lg"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
             <table className="min-w-full bg-white rounded-xl border border-gray-200">
-              <thead className="sticky top-0 bg-green-700 text-white z-10">
+              <thead className="sticky top-0 bg-violet-700 text-white z-10">
                 <tr>
                   <th className="py-4 px-6 text-left text-sm font-semibold w-[100px]">
                     Image
@@ -359,51 +397,16 @@ const ViewCandidates = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <td className="py-4 px-6 align-middle">
-                      {imageLoading[candidate.id] && (
-                        <div className="w-12 h-12 flex items-center justify-center">
-                          <svg
-                            className="animate-spin h-5 w-5 text-gray-500"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                              fill="none"
-                            />
-                          </svg>
-                        </div>
-                      )}
                       <img
                         src={`${BACKEND_URL}${candidate.image}`}
                         alt={candidate.name}
-                        className={`w-12 h-12 object-cover rounded-lg shadow-sm ${
-                          imageLoading[candidate.id] ? "hidden" : ""
-                        }`}
-                        onLoad={() =>
-                          setImageLoading((prev) => ({
-                            ...prev,
-                            [candidate.id]: false,
-                          }))
-                        }
+                        className="w-12 h-12 object-cover rounded-lg shadow-sm"
                         onError={(e) => {
                           console.error(
                             `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
                           );
-                          e.target.src = "/public/placeholder.jpg";
-                          setImageLoading((prev) => ({
-                            ...prev,
-                            [candidate.id]: false,
-                          }));
+                          e.target.src = "/placeholder.jpg";
                         }}
-                        onLoadStart={() =>
-                          setImageLoading((prev) => ({
-                            ...prev,
-                            [candidate.id]: true,
-                          }))
-                        }
                       />
                     </td>
                     <td className="py-4 px-6 text-gray-800 align-middle text-sm">
@@ -427,7 +430,7 @@ const ViewCandidates = () => {
                           onClick={() =>
                             navigate(`/admin/edit-candidate/${candidate.id}`)
                           }
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-orange-600 hover:text-orange-800"
                           title="Edit Candidate"
                           variants={buttonVariants}
                           whileHover="hover"
@@ -454,6 +457,7 @@ const ViewCandidates = () => {
           </motion.div>
         )}
 
+        {/* Footer */}
         <motion.footer
           className="mt-12 text-gray-600 text-sm sm:text-base text-center"
           variants={itemVariants}
