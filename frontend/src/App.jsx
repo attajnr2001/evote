@@ -16,6 +16,7 @@ import ViewResults from "./admin/pages/ViewResults";
 import ViewCandidates from "./admin/pages/ViewCandidates";
 import EditCandidate from "./admin/pages/EditCandidate";
 import Turnout from "./admin/pages/Turnout";
+import AddVoter from "./admin/pages/AddVoter";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -30,6 +31,7 @@ const router = createBrowserRouter(
       <Route path="admin/view-candidates" element={<ViewCandidates />} />
       <Route path="admin/edit-candidate/:id" element={<EditCandidate />} />
       <Route path="admin/turnout" element={<Turnout />} />
+      <Route path="admin/add-voter" element={<AddVoter />} />
     </Route>
   )
 );
