@@ -35,6 +35,7 @@ const ViewCandidates = () => {
   const [candidates, setCandidates] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null); // State for enlarged image
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
@@ -87,7 +88,6 @@ const ViewCandidates = () => {
         throw new Error(data.message || "Failed to delete candidate");
       }
 
-      // Refresh candidates list
       const updatedResponse = await fetch(`${BACKEND_URL}/api/admins/results`, {
         method: "GET",
         headers: {
@@ -130,7 +130,6 @@ const ViewCandidates = () => {
         throw new Error(data.message || "Failed to reset votes");
       }
 
-      // Refresh candidates list
       const updatedResponse = await fetch(`${BACKEND_URL}/api/admins/results`, {
         method: "GET",
         headers: {
@@ -153,10 +152,8 @@ const ViewCandidates = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-
-    // Add header
     doc.setFontSize(18);
-    doc.setTextColor(22, 163, 74); // violet color to match theme
+    doc.setTextColor(22, 163, 74);
     doc.text("JUASS EVoting - Candidate List", 14, 22);
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -167,7 +164,6 @@ const ViewCandidates = () => {
       38
     );
 
-    // Prepare table data
     const tableHeaders = ["ID Number", "Name", "Position", "Year", "Votes"];
     const tableData = Object.keys(candidates)
       .sort((a, b) => positions.indexOf(a) - positions.indexOf(b))
@@ -181,28 +177,35 @@ const ViewCandidates = () => {
         ])
       );
 
-    // Create table
     autoTable(doc, {
       head: [tableHeaders],
       body: tableData,
       startY: 45,
       styles: { fontSize: 8, cellPadding: 3 },
       headStyles: {
-        fillColor: [22, 163, 74], // violet header
-        textColor: [255, 255, 255], // White text
+        fillColor: [22, 163, 74],
+        textColor: [255, 255, 255],
         fontStyle: "bold",
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245], // Light gray for alternating rows
+        fillColor: [245, 245, 245],
       },
       margin: { top: 45 },
     });
 
-    // Save PDF
     doc.save(`Candidates_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
-  // Flatten candidates for table and sort by position
+  // Handle image click to open modal
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setSelectedImage(null);
+  };
+
   const allCandidates = Object.keys(candidates)
     .sort((a, b) => positions.indexOf(a) - positions.indexOf(b))
     .flatMap((position) => candidates[position])
@@ -210,45 +213,34 @@ const ViewCandidates = () => {
       (a, b) => positions.indexOf(a.position) - positions.indexOf(b.position)
     );
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2 },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
   const buttonVariants = {
-    hover: {
-      scale: 1.05,
-      boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
-      transition: { duration: 0.3 },
-    },
+    hover: { scale: 1.05, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)" },
     tap: { scale: 0.95 },
   };
 
   const rowVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.5 },
-    },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
   };
 
   const errorVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
   };
 
   return (
@@ -321,7 +313,6 @@ const ViewCandidates = () => {
           </div>
         </div>
 
-        {/* Error or Loading State */}
         {loading && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -341,7 +332,6 @@ const ViewCandidates = () => {
           </motion.div>
         )}
 
-        {/* Candidates Table */}
         {!loading && !error && allCandidates.length === 0 && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -400,7 +390,8 @@ const ViewCandidates = () => {
                       <img
                         src={`${BACKEND_URL}${candidate.image}`}
                         alt={candidate.name}
-                        className="w-12 h-12 object-cover rounded-lg shadow-sm"
+                        className="w-12 h-12 object-cover rounded-lg shadow-sm cursor-pointer"
+                        onClick={() => handleImageClick(`${BACKEND_URL}${candidate.image}`)}
                         onError={(e) => {
                           console.error(
                             `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
@@ -457,7 +448,49 @@ const ViewCandidates = () => {
           </motion.div>
         )}
 
-        {/* Footer */}
+        {/* Image Modal */}
+        {selectedImage && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            onClick={handleCloseModal}
+          >
+            <div className="relative max-w-3xl w-full">
+              <img
+                src={selectedImage}
+                alt="Enlarged candidate"
+                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                onError={(e) => {
+                  console.error(`Failed to load enlarged image: ${selectedImage}`);
+                  e.target.src = "/placeholder.jpg";
+                }}
+              />
+              <button
+                className="absolute top-2 right-2 text-white bg-red-600 rounded-full p-2 hover:bg-red-800"
+                onClick={handleCloseModal}
+                title="Close"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         <motion.footer
           className="mt-12 text-gray-600 text-sm sm:text-base text-center"
           variants={itemVariants}
