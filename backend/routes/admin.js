@@ -8,7 +8,7 @@ const Student = require("../models/Student");
 const Candidate = require("../models/Candidate");
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, "../Uploads");
+const uploadsDir = path.join(__dirname, "Uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -106,6 +106,7 @@ router.post("/add-candidate", upload.single("image"), async (req, res) => {
   try {
     const { idNumber, name, position, year } = req.body;
     const image = req.file;
+    console.log("Received file:", image ? image.filename : "No file");
 
     // Validate input
     if (!idNumber || !name || !position || !year || !image) {
@@ -282,12 +283,10 @@ router.put("/reset-votes", async (req, res) => {
     // Update all students to set hasVoted to false
     await Student.updateMany({}, { $set: { hasVoted: false } });
 
-    res
-      .status(200)
-      .json({
-        message:
-          "All candidate votes and student voting status reset successfully",
-      });
+    res.status(200).json({
+      message:
+        "All candidate votes and student voting status reset successfully",
+    });
   } catch (error) {
     console.error("Error resetting votes:", error);
     res.status(500).json({ message: "Server error" });
