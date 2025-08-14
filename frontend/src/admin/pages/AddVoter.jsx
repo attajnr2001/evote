@@ -19,34 +19,6 @@ const AddVoter = () => {
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
-  // Fetch students on component mount
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/admins/students`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Failed to fetch students");
-        }
-
-        setStudents(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setTableLoading(false);
-      }
-    };
-
-    fetchStudents();
-  }, [BACKEND_URL]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -275,88 +247,6 @@ const AddVoter = () => {
               {loading ? "Adding Voter..." : "Add Voter"}
             </motion.button>
           </form>
-        </motion.div>
-
-        {/* Students Table */}
-        <motion.div
-          className="overflow-x-auto rounded-xl shadow-lg"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <h2 className="text-2xl font-semibold text-violet-900 mb-4">
-            Registered Voters
-          </h2>
-          {tableLoading && (
-            <motion.div
-              className="text-center p-4 text-gray-600 max-w-lg mx-auto"
-              variants={itemVariants}
-            >
-              Loading voters...
-            </motion.div>
-          )}
-          {!tableLoading && students.length === 0 && (
-            <motion.div
-              className="text-center p-4 text-gray-600 max-w-lg mx-auto"
-              variants={itemVariants}
-            >
-              No voters available.
-            </motion.div>
-          )}
-          {!tableLoading && students.length > 0 && (
-            <table className="min-w-full bg-white rounded-xl border border-gray-200">
-              <thead className="sticky top-0 bg-violet-700 text-white z-10">
-                <tr>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
-                    Name
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
-                    Index Number
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
-                    Class
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
-                    Year
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
-                    Has Voted
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student, index) => (
-                  <motion.tr
-                    key={student.id}
-                    className={`border-b border-gray-200 ${
-                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    }`}
-                    variants={rowVariants}
-                    initial="hidden"
-                    animate="visible"
-                    whileHover={{ backgroundColor: "#f0fdf4" }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
-                      {student.name}
-                    </td>
-                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
-                      {student.indexNumber}
-                    </td>
-                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
-                      {student.class}
-                    </td>
-                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
-                      {student.year}
-                    </td>
-                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
-                      {student.hasVoted ? "Yes" : "No"}
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </motion.div>
 
         {/* Footer */}
