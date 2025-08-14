@@ -176,10 +176,10 @@ const Vote = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-violet-50">
       {/* Header */}
       <motion.div
-        className="text-center py-8 bg-green-900 text-white"
+        className="text-center py-8 bg-violet-900 text-white"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -245,7 +245,7 @@ const Vote = () => {
             animate="visible"
           >
             <motion.h2
-              className="text-2xl md:text-3xl font-semibold text-green-900 mb-8"
+              className="text-2xl md:text-3xl font-semibold text-violet-900 mb-8"
               variants={itemVariants}
             >
               {position}
@@ -280,7 +280,7 @@ const Vote = () => {
                       value={candidate.id}
                       checked={selections[position] === candidate.id}
                       onChange={() => handleSelection(position, candidate.id)}
-                      className="h-5 w-5 text-green-600 focus:ring-green-500"
+                      className="h-5 w-5 text-violet-600 focus:ring-violet-500"
                     />
                     <span className="text-gray-700 text-sm font-medium">
                       Select
@@ -296,7 +296,7 @@ const Vote = () => {
                     validPositions[index + 1].toLowerCase().replace(/\s+/g, "-")
                   )
                 }
-                className="mt-8 bg-green-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
+                className="mt-8 bg-violet-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"
@@ -306,7 +306,7 @@ const Vote = () => {
             ) : (
               <motion.button
                 onClick={handleSubmit}
-                className="mt-8 bg-green-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
+                className="mt-8 bg-violet-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
                 disabled={loading}
                 variants={buttonVariants}
                 whileHover="hover"
@@ -353,7 +353,7 @@ const Vote = () => {
               </motion.button>
               <motion.button
                 onClick={handleConfirm}
-                className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300"
+                className="bg-violet-600 text-white py-2 px-4 rounded-lg hover:bg-violet-700 transition duration-300"
                 disabled={loading}
                 variants={buttonVariants}
                 whileHover="hover"

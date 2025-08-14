@@ -55,7 +55,7 @@ const StudentLogin = () => {
           alt="JUASS School Badge"
           className="w-32 h-32 mx-auto mb-4 object-contain"
         />
-        <h1 className="text-3xl md:text-4xl font-bold text-green-800">
+        <h1 className="text-3xl md:text-4xl font-bold text-violet-800">
           JUASS EVoting - Student Login
         </h1>
         <p className="text-lg md:text-xl text-gray-600 mt-2">
@@ -79,7 +79,7 @@ const StudentLogin = () => {
             type="text"
             id="studentId"
             placeholder="Enter your Student ID"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600"
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
             disabled={loading}
@@ -88,7 +88,7 @@ const StudentLogin = () => {
         <button
           type="button"
           onClick={handleLogin}
-          className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300 disabled:bg-green-400"
+          className="w-full bg-violet-600 text-white py-3 px-4 rounded-lg hover:bg-violet-700 transition duration-300 disabled:bg-violet-400"
           disabled={loading}
         >
           {loading ? "Logging in..." : "Login"}
