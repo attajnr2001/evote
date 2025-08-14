@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { BarChart } from "@mui/icons-material";
 import schLogo from "/logo.jpg";
 
@@ -52,93 +53,191 @@ const ViewResults = () => {
     };
 
     fetchResults();
-  }, []);
+  }, [BACKEND_URL]);
 
   // Filter positions to only those with candidates
   const validPositions = positions.filter(
     (position) => results[position]?.length > 0
   );
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const errorVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar-like Header */}
-      <div className="w-full md:w-64 bg-green-800 text-white p-6 flex flex-col items-center">
-        <img
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      <motion.div
+        className="w-full md:w-72 bg-violet-900 text-white p-6 flex flex-col items-center"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.img
           src={schLogo}
           alt="JUASS School Badge"
-          className="w-24 h-24 mb-4 object-contain"
+          className="w-28 h-28 mb-6 object-contain rounded-full shadow-lg"
+          variants={itemVariants}
         />
-        <h1 className="text-2xl font-bold">JUASS EVoting</h1>
-        <p className="text-sm mt-2">View Results</p>
-      </div>
+        <motion.h1
+          className="text-3xl font-extrabold tracking-tight"
+          variants={itemVariants}
+        >
+          JUASS EVoting
+        </motion.h1>
+        <motion.p
+          className="text-sm mt-2 text-gray-200"
+          variants={itemVariants}
+        >
+          View Results
+        </motion.p>
+      </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
-        <h1 className="text-3xl font-bold text-green-800 mb-6 flex items-center gap-2">
+      <motion.div
+        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-orange-50 via-white to-violet-50"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.h1
+          className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight flex items-center gap-2 mb-6"
+          variants={itemVariants}
+        >
           <BarChart />
           Election Results
-        </h1>
+        </motion.h1>
 
         {/* Error or Loading State */}
         {loading && (
-          <div className="text-center p-4 text-gray-600">
+          <motion.div
+            className="text-center p-4 text-gray-600 max-w-lg mx-auto"
+            variants={itemVariants}
+          >
             Loading results...
-          </div>
+          </motion.div>
         )}
-        {error && <div className="text-center p-4 text-red-600">{error}</div>}
+        {error && (
+          <motion.div
+            className="text-center p-4 text-red-600 bg-red-50 rounded-lg max-w-lg mx-auto"
+            variants={errorVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {error}
+          </motion.div>
+        )}
 
         {/* Results Sections */}
         {!loading && !error && validPositions.length === 0 && (
-          <div className="text-center p-4 text-gray-600">
+          <motion.div
+            className="text-center p-4 text-gray-600 max-w-lg mx-auto"
+            variants={itemVariants}
+          >
             No results available.
-          </div>
+          </motion.div>
         )}
         {!loading &&
           !error &&
-          validPositions.map((position) => (
-            <section key={position} className="mb-12">
-              <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-                {position}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {results[position]
-                  .sort((a, b) => b.votes - a.votes) // Sort by votes descending
-                  .map((candidate) => (
-                    <div
-                      key={candidate.id}
-                      className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center"
-                    >
-                      <img
-                        src={`${BACKEND_URL}${candidate.image}`}
-                        alt={candidate.name}
-                        className="w-64 h-64 object-cover rounded-lg mb-4"
-                        onError={(e) => {
-                          console.error(
-                            `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
-                          );
-                          e.target.src = "/placeholder.jpg"; // Ensure this exists in public folder
-                        }}
-                      />
-                      <p className="text-lg font-semibold text-gray-700 mb-2">
-                        {candidate.name}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Votes:{" "}
-                        <span className="font-bold text-green-600">
-                          {candidate.votes}
-                        </span>
-                      </p>
-                    </div>
-                  ))}
-              </div>
-            </section>
-          ))}
+          validPositions.map((position) => {
+            const totalVotes = results[position].reduce(
+              (sum, candidate) => sum + candidate.votes,
+              0
+            );
+            return (
+              <motion.section
+                key={position}
+                className="mb-12"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.h2
+                  className="text-2xl font-semibold text-gray-700 mb-4"
+                  variants={itemVariants}
+                >
+                  {position}
+                </motion.h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {results[position]
+                    .sort((a, b) => b.votes - a.votes) // Sort by votes descending
+                    .map((candidate) => {
+                      const percentage =
+                        totalVotes > 0
+                          ? ((candidate.votes / totalVotes) * 100).toFixed(1)
+                          : 0;
+                      return (
+                        <motion.div
+                          key={candidate.id}
+                          className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+                          variants={cardVariants}
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <img
+                            src={`${BACKEND_URL}${candidate.image}`}
+                            alt={candidate.name}
+                            className="w-64 h-64 object-cover rounded-lg mb-4 shadow-sm"
+                            onError={(e) => {
+                              console.error(
+                                `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
+                              );
+                              e.target.src = "/placeholder.jpg";
+                            }}
+                          />
+                          <p className="text-lg font-semibold text-gray-700 mb-2">
+                            {candidate.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Votes:{" "}
+                            <span className="font-bold text-violet-600">
+                              {candidate.votes} ({percentage}%)
+                            </span>
+                          </p>
+                        </motion.div>
+                      );
+                    })}
+                </div>
+              </motion.section>
+            );
+          })}
 
         {/* Footer */}
-        <footer className="mt-12 text-gray-500 text-sm text-center">
+        <motion.footer
+          className="mt-12 text-gray-600 text-sm sm:text-base text-center"
+          variants={itemVariants}
+        >
           &copy; {new Date().getFullYear()} JUASS EVoting. All rights reserved.
-        </footer>
-      </div>
+        </motion.footer>
+      </motion.div>
     </div>
   );
 };

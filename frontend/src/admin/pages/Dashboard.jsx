@@ -51,17 +51,17 @@ const Dashboard = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [BACKEND_URL]);
 
   const cards = [
     {
       title: "Add Voter",
-      icon: <PersonAdd className="text-green-600" fontSize="large" />,
+      icon: <PersonAdd className="text-violet-600" fontSize="large" />,
       route: "/admin/add-voter",
     },
     {
       title: "Add Candidate",
-      icon: <HowToVote className="text-green-600" fontSize="large" />,
+      icon: <HowToVote className="text-violet-600" fontSize="large" />,
       route: "/admin/add-candidate",
     },
     {
@@ -74,14 +74,14 @@ const Dashboard = () => {
       icon: <BarChart className="text-purple-600" fontSize="large" />,
       route: "/admin/view-candidates",
     },
-    {
-      title: "View Winners",
-      icon: <EmojiEvents className="text-yellow-600" fontSize="large" />,
-      route: "/admin/view-winners",
-    },
+    // {
+    //   title: "View Winners",
+    //   icon: <EmojiEvents className="text-yellow-600" fontSize="large" />,
+    //   route: "/admin/view-winners",
+    // },
     {
       title: "Show Turnout",
-      icon: <PieChart className="text-blue-600" fontSize="large" />,
+      icon: <PieChart className="text-orange-600" fontSize="large" />,
       route: "/admin/turnout",
     },
   ];
@@ -89,6 +89,14 @@ const Dashboard = () => {
   const handleLogout = () => {
     navigate("/");
   };
+
+  // Calculate percentages
+  const votedPercentage = stats.totalVoters
+    ? ((stats.voted / stats.totalVoters) * 100).toFixed(1)
+    : 0;
+  const notVotedPercentage = stats.totalVoters
+    ? ((stats.notVoted / stats.totalVoters) * 100).toFixed(1)
+    : 0;
 
   // Animation variants
   const containerVariants = {
@@ -135,7 +143,7 @@ const Dashboard = () => {
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <motion.div
-        className="w-full md:w-72 bg-green-900 text-white p-6 flex flex-col items-center"
+        className="w-full md:w-72 bg-violet-900 text-white p-6 flex flex-col items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -174,13 +182,13 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <motion.div
-        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-green-50"
+        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-orange-50 via-white to-violet-50"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.h1
-          className="text-4xl sm:text-5xl font-extrabold text-green-900 tracking-tight mb-6"
+          className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight mb-6"
           variants={itemVariants}
         >
           Admin Dashboard
@@ -212,12 +220,18 @@ const Dashboard = () => {
                 {
                   title: "Total Voters",
                   value: stats.totalVoters,
-                  color: "text-green-600",
+                  color: "text-violet-600",
                 },
-                { title: "Voted", value: stats.voted, color: "text-green-600" },
+                {
+                  title: "Voted",
+                  value: stats.voted,
+                  percentage: `${votedPercentage}%`,
+                  color: "text-violet-600",
+                },
                 {
                   title: "Not Voted",
                   value: stats.notVoted,
+                  percentage: `${notVotedPercentage}%`,
                   color: "text-red-600",
                 },
               ].map((stat) => (
@@ -233,6 +247,11 @@ const Dashboard = () => {
                   </h3>
                   <p className={`text-3xl font-bold ${stat.color}`}>
                     {stat.value}
+                    {stat.percentage && (
+                      <span className="text-lg font-normal ml-2">
+                        ({stat.percentage})
+                      </span>
+                    )}
                   </p>
                 </motion.div>
               ))}

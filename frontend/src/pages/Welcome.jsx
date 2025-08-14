@@ -35,7 +35,7 @@ const Welcome = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex flex-col items-center justify-center p-4 sm:p-8"
+      className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-violet-50 flex flex-col items-center justify-center p-4 sm:p-8"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -51,7 +51,7 @@ const Welcome = () => {
           transition={{ duration: 0.3 }}
         />
         <motion.h1
-          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-900 tracking-tight"
+          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-orange-900 tracking-tight"
           variants={itemVariants}
         >
           Welcome to JUASS EVoting
@@ -81,7 +81,7 @@ const Welcome = () => {
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
           <Link
             to="/admin-login"
-            className="flex items-center justify-center gap-2 bg-blue-700 text-white py-3 px-8 rounded-full font-semibold text-lg hover:bg-blue-800 transition duration-300 shadow-md"
+            className="flex items-center justify-center gap-2 bg-orange-700 text-white py-3 px-8 rounded-full font-semibold text-lg hover:bg-orange-800 transition duration-300 shadow-md"
           >
             <span>I am an Admin</span>
           </Link>
@@ -89,7 +89,7 @@ const Welcome = () => {
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
           <Link
             to="/student-login"
-            className="flex items-center justify-center gap-2 bg-green-700 text-white py-3 px-8 rounded-full font-semibold text-lg hover:bg-green-800 transition duration-300 shadow-md"
+            className="flex items-center justify-center gap-2 bg-violet-700 text-white py-3 px-8 rounded-full font-semibold text-lg hover:bg-violet-800 transition duration-300 shadow-md"
           >
             <span>I am a Student</span>
           </Link>

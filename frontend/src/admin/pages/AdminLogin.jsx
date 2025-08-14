@@ -76,7 +76,7 @@ const AdminLogin = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex flex-col items-center justify-center p-4 sm:p-8"
+      className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-violet-50 flex flex-col items-center justify-center p-4 sm:p-8"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -92,7 +92,7 @@ const AdminLogin = () => {
           transition={{ duration: 0.3 }}
         />
         <motion.h1
-          className="text-4xl sm:text-5xl font-extrabold text-green-900 tracking-tight"
+          className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight"
           variants={itemVariants}
         >
           JUASS EVoting - Admin Login
@@ -132,7 +132,7 @@ const AdminLogin = () => {
               type="email"
               id="email"
               placeholder="Enter your email"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -150,7 +150,7 @@ const AdminLogin = () => {
               type="password"
               id="password"
               placeholder="Enter your password"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -159,7 +159,7 @@ const AdminLogin = () => {
           </div>
           <motion.button
             type="submit"
-            className="w-full bg-green-700 text-white py-3 px-4 rounded-full font-semibold text-lg hover:bg-green-800 transition duration-300 shadow-md disabled:bg-green-400"
+            className="w-full bg-violet-700 text-white py-3 px-4 rounded-full font-semibold text-lg hover:bg-violet-800 transition duration-300 shadow-md disabled:bg-violet-400"
             disabled={loading}
             variants={buttonVariants}
             whileHover="hover"

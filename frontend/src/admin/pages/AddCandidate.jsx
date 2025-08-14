@@ -126,7 +126,7 @@ const AddCandidate = () => {
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <motion.div
-        className="w-full md:w-72 bg-green-900 text-white p-6 flex flex-col items-center"
+        className="w-full md:w-72 bg-violet-900 text-white p-6 flex flex-col items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -155,13 +155,13 @@ const AddCandidate = () => {
 
       {/* Main Content */}
       <motion.div
-        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-green-50"
+        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-violet-50"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.h1
-          className="text-4xl sm:text-5xl font-extrabold text-green-900 tracking-tight mb-6"
+          className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight mb-6"
           variants={itemVariants}
         >
           Add New Candidate
@@ -195,7 +195,7 @@ const AddCandidate = () => {
                 id="idNumber"
                 name="idNumber"
                 placeholder="Enter student ID number"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200"
                 value={formData.idNumber}
                 onChange={handleInputChange}
                 disabled={loading}
@@ -214,7 +214,7 @@ const AddCandidate = () => {
                 id="name"
                 name="name"
                 placeholder="Enter candidate name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200"
                 value={formData.name}
                 onChange={handleInputChange}
                 disabled={loading}
@@ -231,7 +231,7 @@ const AddCandidate = () => {
               <select
                 id="position"
                 name="position"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200"
                 value={formData.position}
                 onChange={handleInputChange}
                 disabled={loading}
@@ -257,7 +257,7 @@ const AddCandidate = () => {
                 id="year"
                 name="year"
                 placeholder="Enter year (e.g., 2025)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition duration-200"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200"
                 value={formData.year}
                 onChange={handleInputChange}
                 disabled={loading}
@@ -276,7 +276,7 @@ const AddCandidate = () => {
                 id="image"
                 name="image"
                 accept="image/jpeg,image/png"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
                 onChange={handleImageChange}
                 disabled={loading}
                 required
@@ -298,7 +298,7 @@ const AddCandidate = () => {
             )}
             <motion.button
               type="submit"
-              className="w-full bg-green-700 text-white py-3 px-4 rounded-full font-semibold text-lg hover:bg-green-800 transition duration-300 shadow-md disabled:bg-green-400 flex items-center justify-center gap-2"
+              className="w-full bg-violet-700 text-white py-3 px-4 rounded-full font-semibold text-lg hover:bg-violet-800 transition duration-300 shadow-md disabled:bg-violet-400 flex items-center justify-center gap-2"
               disabled={loading}
               variants={buttonVariants}
               whileHover="hover"

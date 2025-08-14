@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import schLogo from "/logo.jpg";
 
 const positions = [
@@ -55,7 +56,7 @@ const Vote = () => {
     };
 
     fetchCandidates();
-  }, []);
+  }, [BACKEND_URL]);
 
   const handleSelection = (position, candidateId) => {
     setSelections((prev) => ({ ...prev, [position]: candidateId }));
@@ -65,7 +66,7 @@ const Vote = () => {
     const section = document.getElementById(sectionId);
     if (section) {
       window.scrollTo({
-        top: section.offsetTop,
+        top: section.offsetTop - 80, // Adjusted for header
         behavior: "smooth",
       });
     }
@@ -119,63 +120,154 @@ const Vote = () => {
     (position) => candidates[position]?.length > 0
   );
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  const buttonVariants = {
+    hover: {
+      scale: 1.05,
+      boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+      transition: { duration: 0.3 },
+    },
+    tap: { scale: 0.95 },
+  };
+
+  const errorVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  };
+
+  const dialogVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.3 },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      transition: { duration: 0.2 },
+    },
+  };
+
   return (
-    <div className="bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Header */}
-      <div className="text-center py-8 bg-green-800 text-white">
-        <img
+      <motion.div
+        className="text-center py-8 bg-green-900 text-white"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.img
           src={schLogo}
           alt="JUASS School Badge"
-          className="w-24 h-24 mx-auto mb-4 object-contain"
+          className="w-28 h-28 mx-auto mb-4 object-contain rounded-full shadow-lg"
+          variants={itemVariants}
         />
-        <h1 className="text-3xl md:text-4xl font-bold">
+        <motion.h1
+          className="text-3xl md:text-4xl font-extrabold tracking-tight"
+          variants={itemVariants}
+        >
           JUASS EVoting - Cast Your Vote
-        </h1>
-        <p className="text-lg md:text-xl mt-2">
+        </motion.h1>
+        <motion.p
+          className="text-lg md:text-xl mt-2 text-gray-200"
+          variants={itemVariants}
+        >
           Select one candidate per position
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
       {/* Error or Loading State */}
       {loading && (
-        <div className="text-center p-4 text-gray-600">
+        <motion.div
+          className="text-center p-4 text-gray-600 max-w-lg mx-auto"
+          variants={itemVariants}
+        >
           Loading candidates...
-        </div>
+        </motion.div>
       )}
-      {error && <div className="text-center p-4 text-red-600">{error}</div>}
+      {error && (
+        <motion.div
+          className="text-center p-4 text-red-600 bg-red-50 rounded-lg max-w-lg mx-auto"
+          variants={errorVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {error}
+        </motion.div>
+      )}
 
       {/* Voting Sections */}
       {!loading && !error && validPositions.length === 0 && (
-        <div className="text-center p-4 text-gray-600">
+        <motion.div
+          className="text-center p-4 text-gray-600 max-w-lg mx-auto"
+          variants={itemVariants}
+        >
           No candidates available for voting.
-        </div>
+        </motion.div>
       )}
       {!loading &&
         !error &&
         validPositions.map((position, index) => (
-          <section
+          <motion.section
             key={position}
             id={position.toLowerCase().replace(/\s+/g, "-")}
-            className="min-h-screen flex flex-col items-center justify-center p-4"
+            className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-green-800 mb-8">
+            <motion.h2
+              className="text-2xl md:text-3xl font-semibold text-green-900 mb-8"
+              variants={itemVariants}
+            >
               {position}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl w-full">
+            </motion.h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
               {candidates[position].map((candidate) => (
-                <div
+                <motion.div
                   key={candidate.id}
-                  className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center"
+                  className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+                  variants={cardVariants}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
                 >
                   <img
                     src={`${BACKEND_URL}${candidate.image}`}
                     alt={candidate.name}
-                    className="w-64 h-64 object-cover rounded-lg mb-4"
+                    className="w-48 h-48 object-cover rounded-lg mb-4 shadow-sm"
                     onError={(e) => {
                       console.error(
                         `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
                       );
-                      e.target.src = "/placeholder.jpg"; // Ensure this file exists in public folder
+                      e.target.src = "/placeholder.jpg";
                     }}
                   />
                   <p className="text-lg font-semibold text-gray-700 mb-4">
@@ -188,40 +280,60 @@ const Vote = () => {
                       value={candidate.id}
                       checked={selections[position] === candidate.id}
                       onChange={() => handleSelection(position, candidate.id)}
-                      className="h-5 w-5 text-green-600"
+                      className="h-5 w-5 text-green-600 focus:ring-green-500"
                     />
-                    <span className="text-gray-700">Select</span>
+                    <span className="text-gray-700 text-sm font-medium">
+                      Select
+                    </span>
                   </label>
-                </div>
+                </motion.div>
               ))}
             </div>
             {index < validPositions.length - 1 ? (
-              <button
+              <motion.button
                 onClick={() =>
                   scrollToSection(
                     validPositions[index + 1].toLowerCase().replace(/\s+/g, "-")
                   )
                 }
-                className="mt-8 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300"
+                className="mt-8 bg-green-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
                 Next: {validPositions[index + 1]}
-              </button>
+              </motion.button>
             ) : (
-              <button
+              <motion.button
                 onClick={handleSubmit}
-                className="mt-8 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition duration-300"
+                className="mt-8 bg-green-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
                 disabled={loading}
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
                 {loading ? "Submitting..." : "Submit Vote"}
-              </button>
+              </motion.button>
             )}
-          </section>
+          </motion.section>
         ))}
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div
+            className="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full"
+            variants={dialogVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
             <h3 className="text-xl font-bold text-gray-800 mb-4">
               Confirm Your Votes
             </h3>
@@ -230,28 +342,37 @@ const Vote = () => {
               votes cannot be changed.
             </p>
             <div className="flex justify-end gap-4">
-              <button
+              <motion.button
                 onClick={handleCancel}
                 className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-300"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
                 Cancel
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={handleConfirm}
                 className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300"
                 disabled={loading}
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
                 Confirm
-              </button>
+              </motion.button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Footer Section */}
-      <footer className="text-center py-8 text-gray-500 text-sm">
+      <motion.footer
+        className="text-center py-8 text-gray-600 text-sm"
+        variants={itemVariants}
+      >
         &copy; {new Date().getFullYear()} JUASS EVoting. All rights reserved.
-      </footer>
+      </motion.footer>
     </div>
   );
 };

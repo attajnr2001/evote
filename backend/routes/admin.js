@@ -214,12 +214,10 @@ router.put("/update-candidate", upload.single("image"), async (req, res) => {
       _id: { $ne: req.body.id },
     });
     if (existingCandidate) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Another candidate already exists for this position with the same ID number",
-        });
+      return res.status(400).json({
+        message:
+          "Another candidate already exists for this position with the same ID number",
+      });
     }
 
     // Update candidate fields
@@ -273,6 +271,25 @@ router.delete("/delete-candidate", async (req, res) => {
     res.status(200).json({ message: "Candidate deleted successfully" });
   } catch (error) {
     console.error("Error deleting candidate:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/reset-votes", async (req, res) => {
+  try {
+    // Update all candidates to set votes to 0
+    await Candidate.updateMany({}, { $set: { votes: 0 } });
+    // Update all students to set hasVoted to false
+    await Student.updateMany({}, { $set: { hasVoted: false } });
+
+    res
+      .status(200)
+      .json({
+        message:
+          "All candidate votes and student voting status reset successfully",
+      });
+  } catch (error) {
+    console.error("Error resetting votes:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

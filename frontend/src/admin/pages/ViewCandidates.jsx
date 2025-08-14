@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Person, Delete, PictureAsPdf, Edit } from "@mui/icons-material";
+import {
+  Person,
+  Delete,
+  PictureAsPdf,
+  Edit,
+  Refresh,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -102,12 +108,55 @@ const ViewCandidates = () => {
     }
   };
 
+  const handleResetVotes = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to reset all candidate votes to zero? This action cannot be undone."
+      )
+    )
+      return;
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/admins/reset-votes`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to reset votes");
+      }
+
+      // Refresh candidates list
+      const updatedResponse = await fetch(`${BACKEND_URL}/api/admins/results`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const updatedData = await updatedResponse.json();
+
+      if (!updatedResponse.ok) {
+        throw new Error(updatedData.message || "Failed to refresh candidates");
+      }
+
+      setCandidates(updatedData);
+      alert("All candidate votes reset successfully");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleExportPDF = () => {
     const doc = new jsPDF();
 
     // Add header
     doc.setFontSize(18);
-    doc.setTextColor(22, 163, 74); // Green color to match theme
+    doc.setTextColor(22, 163, 74); // violet color to match theme
     doc.text("JUASS EVoting - Candidate List", 14, 22);
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -139,7 +188,7 @@ const ViewCandidates = () => {
       startY: 45,
       styles: { fontSize: 8, cellPadding: 3 },
       headStyles: {
-        fillColor: [22, 163, 74], // Green header
+        fillColor: [22, 163, 74], // violet header
         textColor: [255, 255, 255], // White text
         fontStyle: "bold",
       },
@@ -206,7 +255,7 @@ const ViewCandidates = () => {
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <motion.div
-        className="w-full md:w-72 bg-green-900 text-white p-6 flex flex-col items-center"
+        className="w-full md:w-72 bg-violet-900 text-white p-6 flex flex-col items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -235,29 +284,41 @@ const ViewCandidates = () => {
 
       {/* Main Content */}
       <motion.div
-        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-green-50"
+        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-orange-50 via-white to-violet-50"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <div className="flex justify-between items-center mb-6">
           <motion.h1
-            className="text-4xl sm:text-5xl font-extrabold text-green-900 tracking-tight flex items-center gap-2"
+            className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight flex items-center gap-2"
             variants={itemVariants}
           >
             <Person />
             Candidate List
           </motion.h1>
-          <motion.button
-            onClick={handleExportPDF}
-            className="bg-green-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
-            variants={buttonVariants}
-            whileHover="hover"
-            whileTap="tap"
-          >
-            <PictureAsPdf />
-            Export to PDF
-          </motion.button>
+          <div className="flex gap-4">
+            <motion.button
+              onClick={handleExportPDF}
+              className="bg-violet-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
+              <PictureAsPdf />
+              Export to PDF
+            </motion.button>
+            <motion.button
+              onClick={handleResetVotes}
+              className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
+              <Refresh />
+              Reset All Votes
+            </motion.button>
+          </div>
         </div>
 
         {/* Error or Loading State */}
@@ -291,33 +352,33 @@ const ViewCandidates = () => {
         )}
         {!loading && !error && allCandidates.length > 0 && (
           <motion.div
-            className="overflow-x-auto"
+            className="overflow-x-auto rounded-xl shadow-lg"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
-            <table className="min-w-full bg-white rounded-xl shadow-lg">
-              <thead>
-                <tr className="bg-green-700 text-white">
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
+            <table className="min-w-full bg-white rounded-xl border border-gray-200">
+              <thead className="sticky top-0 bg-violet-700 text-white z-10">
+                <tr>
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[100px]">
                     Image
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[120px]">
                     ID Number
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[200px]">
                     Name
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[200px]">
                     Position
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[100px]">
                     Year
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[100px]">
                     Votes
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[120px]">
                     Action
                   </th>
                 </tr>
@@ -326,18 +387,20 @@ const ViewCandidates = () => {
                 {allCandidates.map((candidate, index) => (
                   <motion.tr
                     key={candidate.id}
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                    className={`border-b border-gray-200 ${
+                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                    }`}
                     variants={rowVariants}
                     initial="hidden"
                     animate="visible"
                     whileHover={{ backgroundColor: "#f0fdf4" }}
                     transition={{ duration: 0.3 }}
                   >
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 align-middle">
                       <img
                         src={`${BACKEND_URL}${candidate.image}`}
                         alt={candidate.name}
-                        className="w-16 h-16 object-cover rounded-lg shadow-sm"
+                        className="w-12 h-12 object-cover rounded-lg shadow-sm"
                         onError={(e) => {
                           console.error(
                             `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
@@ -346,44 +409,46 @@ const ViewCandidates = () => {
                         }}
                       />
                     </td>
-                    <td className="py-4 px-6 text-gray-800">
+                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
                       {candidate.idNumber || "-"}
                     </td>
-                    <td className="py-4 px-6 text-gray-800">
+                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
                       {candidate.name}
                     </td>
-                    <td className="py-4 px-6 text-gray-800">
+                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
                       {candidate.position}
                     </td>
-                    <td className="py-4 px-6 text-gray-800">
+                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
                       {candidate.year || "-"}
                     </td>
-                    <td className="py-4 px-6 text-gray-800">
+                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
                       {candidate.votes}
                     </td>
-                    <td className="py-4 px-6 flex gap-2">
-                      <motion.button
-                        onClick={() =>
-                          navigate(`/admin/edit-candidate/${candidate.id}`)
-                        }
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit Candidate"
-                        variants={buttonVariants}
-                        whileHover="hover"
-                        whileTap="tap"
-                      >
-                        <Edit />
-                      </motion.button>
-                      <motion.button
-                        onClick={() => handleDelete(candidate.id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete Candidate"
-                        variants={buttonVariants}
-                        whileHover="hover"
-                        whileTap="tap"
-                      >
-                        <Delete />
-                      </motion.button>
+                    <td className="py-4 px-6 align-middle">
+                      <div className="flex gap-3">
+                        <motion.button
+                          onClick={() =>
+                            navigate(`/admin/edit-candidate/${candidate.id}`)
+                          }
+                          className="text-orange-600 hover:text-orange-800"
+                          title="Edit Candidate"
+                          variants={buttonVariants}
+                          whileHover="hover"
+                          whileTap="tap"
+                        >
+                          <Edit fontSize="small" />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => handleDelete(candidate.id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Delete Candidate"
+                          variants={buttonVariants}
+                          whileHover="hover"
+                          whileTap="tap"
+                        >
+                          <Delete fontSize="small" />
+                        </motion.button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))}

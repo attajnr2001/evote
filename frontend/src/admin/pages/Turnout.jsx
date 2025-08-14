@@ -63,7 +63,7 @@ const Turnout = () => {
 
   // Data for the pie chart
   const chartData = [
-    { name: "Voted", value: stats.voted, color: "#16a34a" }, // Green
+    { name: "Voted", value: stats.voted, color: "#16a34a" }, // violet
     { name: "Not Voted", value: stats.notVoted, color: "#dc2626" }, // Red
   ];
 
@@ -108,7 +108,7 @@ const Turnout = () => {
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <motion.div
-        className="w-full md:w-72 bg-green-900 text-white p-6 flex flex-col items-center"
+        className="w-full md:w-72 bg-violet-900 text-white p-6 flex flex-col items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -147,13 +147,13 @@ const Turnout = () => {
 
       {/* Main Content */}
       <motion.div
-        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-green-50"
+        className="flex-1 p-6 sm:p-8 bg-gradient-to-br from-orange-50 via-white to-violet-50"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.h1
-          className="text-4xl sm:text-5xl font-extrabold text-green-900 tracking-tight mb-6 flex items-center gap-2"
+          className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight mb-6 flex items-center gap-2"
           variants={itemVariants}
         >
           <PieChart />
