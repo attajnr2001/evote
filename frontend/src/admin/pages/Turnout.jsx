@@ -206,50 +206,86 @@ const Turnout = () => {
             </motion.p>
           )}
           {!loading && !error && (
-            <motion.div
-              className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100"
-              variants={chartVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <ResponsiveContainer width="100%" height={450}>
-                <RechartsPieChart>
-                  <Pie
-                    data={chartData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={160}
-                    innerRadius={60} // Add donut style
-                    label={renderCustomLabel}
-                    labelLine={{ stroke: "#4b5563", strokeWidth: 1 }}
-                    animationDuration={1000}
-                    animationBegin={200}
+            <>
+              <motion.div
+                className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100"
+                variants={chartVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <ResponsiveContainer width="100%" height={450}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={160}
+                      innerRadius={60}
+                      label={renderCustomLabel}
+                      labelLine={{ stroke: "#4b5563", strokeWidth: 1 }}
+                      animationDuration={1000}
+                      animationBegin={200}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.color}
+                          stroke="#ffffff"
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip content={renderCustomTooltip} />
+                    <Legend
+                      wrapperStyle={{
+                        paddingTop: "30px",
+                        fontSize: "18px",
+                        fontWeight: "600",
+                        color: "#1f2937",
+                      }}
+                      iconType="circle"
+                      iconSize={14}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </motion.div>
+              {/* Stats Display Below Chart */}
+              <motion.div
+                className="mt-6 flex justify-center gap-8"
+                variants={itemVariants}
+              >
+                <div className="text-center">
+                  <p
+                    className="text-3xl font-bold"
+                    style={{ color: "#16a34a" }}
                   >
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.color}
-                        stroke="#ffffff"
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={renderCustomTooltip} />
-                  <Legend
-                    wrapperStyle={{
-                      paddingTop: "30px",
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: "#1f2937",
-                    }}
-                    iconType="circle"
-                    iconSize={14}
-                  />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            </motion.div>
+                    Voted: {stats.voted}
+                  </p>
+                  <p
+                    className="text-2xl font-semibold"
+                    style={{ color: "#16a34a" }}
+                  >
+                    {((stats.voted / stats.totalVoters) * 100).toFixed(1)}%
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p
+                    className="text-3xl font-bold"
+                    style={{ color: "#dc2626" }}
+                  >
+                    Not Voted: {stats.notVoted}
+                  </p>
+                  <p
+                    className="text-2xl font-semibold"
+                    style={{ color: "#dc2626" }}
+                  >
+                    {((stats.notVoted / stats.totalVoters) * 100).toFixed(1)}%
+                  </p>
+                </div>
+              </motion.div>
+            </>
           )}
         </motion.div>
 
