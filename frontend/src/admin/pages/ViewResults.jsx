@@ -26,7 +26,8 @@ const ViewResults = () => {
   const [results, setResults] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
+  const [selectedPosition, setSelectedPosition] = useState(null);
+  const BACKEND_URL = import.meta.env.VITE_ENDPOINT || "http://localhost:5000";
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -92,6 +93,11 @@ const ViewResults = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
+  const buttonVariants = {
+    hover: { scale: 1.05, backgroundColor: "#7F3CFF" },
+    tap: { scale: 0.95 },
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -117,8 +123,26 @@ const ViewResults = () => {
           className="text-sm mt-2 text-gray-200"
           variants={itemVariants}
         >
-          View Results
+          Select a Position
         </motion.p>
+        <div className="mt-6 w-full space-y-2 overflow-y-auto max-h-[70vh]">
+          {validPositions.map((position) => (
+            <motion.button
+              key={position}
+              className={`w-full py-2 px-4 rounded-lg text-left text-sm font-medium transition-colors ${
+                selectedPosition === position
+                  ? "bg-violet-600"
+                  : "bg-violet-800 hover:bg-violet-700"
+              }`}
+              onClick={() => setSelectedPosition(position)}
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
+              {position}
+            </motion.button>
+          ))}
+        </div>
       </motion.div>
 
       {/* Main Content */}
@@ -156,7 +180,7 @@ const ViewResults = () => {
           </motion.div>
         )}
 
-        {/* Results Sections */}
+        {/* Results Section */}
         {!loading && !error && validPositions.length === 0 && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -165,70 +189,73 @@ const ViewResults = () => {
             No results available.
           </motion.div>
         )}
-        {!loading &&
-          !error &&
-          validPositions.map((position) => {
-            const totalVotes = results[position].reduce(
-              (sum, candidate) => sum + candidate.votes,
-              0
-            );
-            return (
-              <motion.section
-                key={position}
-                className="mb-12"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <motion.h2
-                  className="text-2xl font-semibold text-gray-700 mb-4"
-                  variants={itemVariants}
-                >
-                  {position}
-                </motion.h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {results[position]
-                    .sort((a, b) => b.votes - a.votes) // Sort by votes descending
-                    .map((candidate) => {
-                      const percentage =
-                        totalVotes > 0
-                          ? ((candidate.votes / totalVotes) * 100).toFixed(1)
-                          : 0;
-                      return (
-                        <motion.div
-                          key={candidate.id}
-                          className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
-                          variants={cardVariants}
-                          whileHover={{ scale: 1.02 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <img
-                            src={`${BACKEND_URL}${candidate.image}`}
-                            alt={candidate.name}
-                            className="w-64 h-64 object-cover rounded-lg mb-4 shadow-sm"
-                            onError={(e) => {
-                              console.error(
-                                `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
-                              );
-                              e.target.src = "/placeholder.jpg";
-                            }}
-                          />
-                          <p className="text-lg font-semibold text-gray-700 mb-2">
-                            {candidate.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Votes:{" "}
-                            <span className="font-bold text-violet-600">
-                              {candidate.votes} ({percentage}%)
-                            </span>
-                          </p>
-                        </motion.div>
-                      );
-                    })}
-                </div>
-              </motion.section>
-            );
-          })}
+        {!loading && !error && selectedPosition && results[selectedPosition]?.length > 0 && (
+          <motion.section
+            className="mb-12"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.h2
+              className="text-2xl font-semibold text-gray-700 mb-4"
+              variants={itemVariants}
+            >
+              {selectedPosition}
+            </motion.h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {results[selectedPosition]
+                .sort((a, b) => b.votes - a.votes)
+                .map((candidate) => {
+                  const totalVotes = results[selectedPosition].reduce(
+                    (sum, candidate) => sum + candidate.votes,
+                    0
+                  );
+                  const percentage =
+                    totalVotes > 0
+                      ? ((candidate.votes / totalVotes) * 100).toFixed(1)
+                      : 0;
+                  return (
+                    <motion.div
+                      key={candidate.id}
+                      className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+                      variants={cardVariants}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <img
+                        src={`${BACKEND_URL}${candidate.image}`}
+                        alt={candidate.name}
+                        className="w-64 h-64 object-cover rounded-lg mb-4 shadow-sm"
+                        onError={(e) => {
+                          console.error(
+                            `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
+                          );
+                          e.target.src = "/placeholder.jpg";
+                        }}
+                      />
+                      <p className="text-lg font-semibold text-gray-700 mb-2">
+                        {candidate.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Votes:{" "}
+                        <span className="font-bold text-violet-600">
+                          {candidate.votes} ({percentage}%)
+                        </span>
+                      </p>
+                    </motion.div>
+                  );
+                })}
+            </div>
+          </motion.section>
+        )}
+        {!loading && !error && !selectedPosition && (
+          <motion.div
+            className="text-center p-4 text-gray-600 max-w-lg mx-auto"
+            variants={itemVariants}
+          >
+            Please select a position to view results.
+          </motion.div>
+        )}
 
         {/* Footer */}
         <motion.footer
