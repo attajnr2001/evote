@@ -63,7 +63,7 @@ const Turnout = () => {
 
   // Data for the pie chart
   const chartData = [
-    { name: "Voted", value: stats.voted, color: "#16a34a" }, // violet
+    { name: "Voted", value: stats.voted, color: "#16a34a" }, // Green
     { name: "Not Voted", value: stats.notVoted, color: "#dc2626" }, // Red
   ];
 
@@ -102,6 +102,28 @@ const Turnout = () => {
   const chartVariants = {
     hidden: { opacity: 0, scale: 0.8 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+  };
+
+  // Custom label renderer for pie chart
+  const renderCustomLabel = ({ name, value, percent }) => {
+    const percentage = (percent * 100).toFixed(1);
+    return `${name}: ${value} (${percentage}%)`;
+  };
+
+  // Custom tooltip renderer
+  const renderCustomTooltip = ({ payload }) => {
+    if (payload && payload.length) {
+      const { name, value, percent } = payload[0];
+      const percentage = (percent * 100).toFixed(1);
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-md border border-gray-200">
+          <p className="text-gray-800 font-semibold">{name}</p>
+          <p className="text-gray-600">Count: {value}</p>
+          <p className="text-gray-600">Percentage: {percentage}%</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -185,12 +207,12 @@ const Turnout = () => {
           )}
           {!loading && !error && (
             <motion.div
-              className="bg-white p-6 rounded-xl shadow-lg"
+              className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100"
               variants={chartVariants}
               initial="hidden"
               animate="visible"
             >
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={450}>
                 <RechartsPieChart>
                   <Pie
                     data={chartData}
@@ -198,30 +220,32 @@ const Turnout = () => {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={150}
-                    label={({ name, percent }) =>
-                      `${name}: ${(percent * 100).toFixed(1)}%`
-                    }
-                    animationDuration={800}
+                    outerRadius={160}
+                    innerRadius={60} // Add donut style
+                    label={renderCustomLabel}
+                    labelLine={{ stroke: "#4b5563", strokeWidth: 1 }}
+                    animationDuration={1000}
+                    animationBegin={200}
                   >
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
+                  <Tooltip content={renderCustomTooltip} />
                   <Legend
                     wrapperStyle={{
-                      paddingTop: "20px",
-                      fontSize: "16px",
-                      fontWeight: "500",
+                      paddingTop: "30px",
+                      fontSize: "18px",
+                      fontWeight: "600",
+                      color: "#1f2937",
                     }}
+                    iconType="circle"
+                    iconSize={14}
                   />
                 </RechartsPieChart>
               </ResponsiveContainer>
