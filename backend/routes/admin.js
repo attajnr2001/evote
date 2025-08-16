@@ -1,5 +1,3 @@
-// DOCUMENT filename="admin.js" (updated with new routes)
-
 const express = require("express");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
@@ -12,10 +10,10 @@ const router = express.Router();
 
 const uploadsDir = path.join(__dirname, "../Uploads");
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  fs.mkdirSync(UploadsDir, { recursive: true });
 }
 
-// Multer configuration (unchanged)
+// Multer configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
@@ -45,7 +43,7 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// Existing routes (unchanged, included for context)
+// Admin login route
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -77,6 +75,48 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Change admin password route
+router.put("/change-password", async (req, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({
+          message: "Email, current password, and new password are required",
+        });
+    }
+
+    // Find admin by email
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    admin.password = hashedPassword;
+    await admin.save();
+
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Stats route
 router.get("/stats", async (req, res) => {
   try {
     const totalVoters = await Student.countDocuments();
@@ -93,6 +133,7 @@ router.get("/stats", async (req, res) => {
   }
 });
 
+// Add candidate route
 router.post("/add-candidate", upload.single("image"), async (req, res) => {
   try {
     const { idNumber, name, position, year } = req.body;
@@ -124,6 +165,7 @@ router.post("/add-candidate", upload.single("image"), async (req, res) => {
   }
 });
 
+// Fetch results route
 router.get("/results", async (req, res) => {
   try {
     const candidates = await Candidate.find().sort({ position: 1 });
@@ -149,6 +191,7 @@ router.get("/results", async (req, res) => {
   }
 });
 
+// Fetch single candidate route
 router.get("/candidate/:id", async (req, res) => {
   try {
     const candidate = await Candidate.findById(req.params.id);
@@ -170,6 +213,7 @@ router.get("/candidate/:id", async (req, res) => {
   }
 });
 
+// Update candidate route
 router.put("/update-candidate", upload.single("image"), async (req, res) => {
   try {
     const { idNumber, name, position, year } = req.body;
@@ -211,6 +255,7 @@ router.put("/update-candidate", upload.single("image"), async (req, res) => {
   }
 });
 
+// Delete candidate route
 router.delete("/delete-candidate", async (req, res) => {
   try {
     const { candidateId } = req.body;
@@ -233,6 +278,7 @@ router.delete("/delete-candidate", async (req, res) => {
   }
 });
 
+// Reset votes route
 router.put("/reset-votes", async (req, res) => {
   try {
     await Candidate.updateMany({}, { $set: { votes: 0 } });
@@ -247,7 +293,7 @@ router.put("/reset-votes", async (req, res) => {
   }
 });
 
-// New route to fetch all students
+// Fetch all students route
 router.get("/students", async (req, res) => {
   try {
     const students = await Student.find().sort({ name: 1 });
@@ -268,7 +314,7 @@ router.get("/students", async (req, res) => {
   }
 });
 
-// New route to add a voter
+// Add voter route
 router.post("/add-voter", async (req, res) => {
   try {
     const { name, indexNumber, class: studentClass, year } = req.body;
