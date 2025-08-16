@@ -74,11 +74,11 @@ const Dashboard = () => {
       icon: <BarChart className="text-purple-600" fontSize="large" />,
       route: "/admin/view-candidates",
     },
-    // {
-    //   title: "View Winners",
-    //   icon: <EmojiEvents className="text-yellow-600" fontSize="large" />,
-    //   route: "/admin/view-winners",
-    // },
+    {
+      title: "View Voters",
+      icon: <EmojiEvents className="text-yellow-600" fontSize="large" />,
+      route: "/admin/view-voters",
+    },
     {
       title: "Show Turnout",
       icon: <PieChart className="text-orange-600" fontSize="large" />,
