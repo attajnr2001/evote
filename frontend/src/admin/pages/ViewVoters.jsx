@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Person, PictureAsPdf, Refresh } from "@mui/icons-material";
+import { Person, PictureAsPdf, Refresh, Search } from "@mui/icons-material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import schLogo from "/logo.jpg";
@@ -10,6 +10,7 @@ const ViewVoters = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterVoted, setFilterVoted] = useState("all"); // "all", "voted", or "not-voted"
+  const [searchQuery, setSearchQuery] = useState(""); // State for search input
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   useEffect(() => {
@@ -126,10 +127,22 @@ const ViewVoters = () => {
     setFilterVoted(value);
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   const filteredVoters = voters
     .filter((voter) => {
       if (filterVoted === "all") return true;
       return filterVoted === "voted" ? voter.hasVoted : !voter.hasVoted;
+    })
+    .filter((voter) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        voter.name.toLowerCase().includes(query) ||
+        voter.indexNumber.toLowerCase().includes(query)
+      );
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -196,7 +209,7 @@ const ViewVoters = () => {
         initial="hidden"
         animate="visible"
       >
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <motion.h1
             className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight flex items-center gap-2"
             variants={itemVariants}
@@ -204,37 +217,52 @@ const ViewVoters = () => {
             <Person />
             Voter List
           </motion.h1>
-          <div className="flex gap-4">
-            <motion.button
-              onClick={handleExportPDF}
-              className="bg-violet-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <motion.div
+              className="relative w-full sm:w-64"
+              variants={itemVariants}
             >
-              <PictureAsPdf />
-              Export to PDF
-            </motion.button>
-            {/* <motion.button
-              onClick={handleResetVotes}
-              className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Refresh />
-              Reset All Votes
-            </motion.button> */}
-            <motion.select
-              onChange={(e) => handleFilterVoted(e.target.value)}
-              className="bg-violet-700 text-white py-2 px-4 rounded-full font-semibold hover:bg-violet-800 transition duration-300 shadow-md"
-              variants={buttonVariants}
-              whileHover="hover"
-            >
-              <option value="all">All Voters</option>
-              <option value="voted">Voted</option>
-              <option value="not-voted">Not Voted</option>
-            </motion.select>
+              <input
+                type="text"
+                placeholder="Search by name or index number"
+                className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200 pl-10"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </motion.div>
+            <div className="flex gap-4">
+              <motion.button
+                onClick={handleExportPDF}
+                className="bg-violet-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <PictureAsPdf />
+                Export to PDF
+              </motion.button>
+              {/* <motion.button
+                onClick={handleResetVotes}
+                className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Refresh />
+                Reset All Votes
+              </motion.button> */}
+              <motion.select
+                onChange={(e) => handleFilterVoted(e.target.value)}
+                className="bg-violet-700 text-white py-2 px-4 rounded-full font-semibold hover:bg-violet-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+              >
+                <option value="all">All Voters</option>
+                <option value="voted">Voted</option>
+                <option value="not-voted">Not Voted</option>
+              </motion.select>
+            </div>
           </div>
         </div>
 
