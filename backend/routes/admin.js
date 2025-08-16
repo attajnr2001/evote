@@ -10,7 +10,7 @@ const router = express.Router();
 
 const uploadsDir = path.join(__dirname, "../Uploads");
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(UploadsDir, { recursive: true });
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Multer configuration
@@ -82,11 +82,9 @@ router.put("/change-password", async (req, res) => {
 
     // Validate input
     if (!email || !currentPassword || !newPassword) {
-      return res
-        .status(400)
-        .json({
-          message: "Email, current password, and new password are required",
-        });
+      return res.status(400).json({
+        message: "Email, current password, and new password are required",
+      });
     }
 
     // Find admin by email
