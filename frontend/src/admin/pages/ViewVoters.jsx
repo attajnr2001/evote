@@ -9,7 +9,7 @@ const ViewVoters = () => {
   const [voters, setVoters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sortVoted, setSortVoted] = useState(null); // null, true, or false
+  const [filterVoted, setFilterVoted] = useState("all"); // "all", "voted", or "not-voted"
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   useEffect(() => {
@@ -92,10 +92,10 @@ const ViewVoters = () => {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
-    doc.text(`Total Voters: ${voters.length}`, 14, 38);
+    doc.text(`Total Voters: ${filteredVoters.length}`, 14, 38);
 
     const tableHeaders = ["Index Number", "Name", "Class", "Year", "Has Voted"];
-    const tableData = sortedVoters.map((voter) => [
+    const tableData = filteredVoters.map((voter) => [
       voter.indexNumber,
       voter.name,
       voter.class,
@@ -122,14 +122,16 @@ const ViewVoters = () => {
     doc.save(`Voters_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
-  const handleSortVoted = (value) => {
-    setSortVoted(value);
+  const handleFilterVoted = (value) => {
+    setFilterVoted(value);
   };
 
-  const sortedVoters = [...voters].sort((a, b) => {
-    if (sortVoted === null) return a.name.localeCompare(b.name);
-    return sortVoted ? b.hasVoted - a.hasVoted : a.hasVoted - b.hasVoted;
-  });
+  const filteredVoters = voters
+    .filter((voter) => {
+      if (filterVoted === "all") return true;
+      return filterVoted === "voted" ? voter.hasVoted : !voter.hasVoted;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -224,18 +226,14 @@ const ViewVoters = () => {
               Reset All Votes
             </motion.button>
             <motion.select
-              onChange={(e) =>
-                handleSortVoted(
-                  e.target.value === "" ? null : e.target.value === "true"
-                )
-              }
+              onChange={(e) => handleFilterVoted(e.target.value)}
               className="bg-violet-700 text-white py-2 px-4 rounded-full font-semibold hover:bg-violet-800 transition duration-300 shadow-md"
               variants={buttonVariants}
               whileHover="hover"
             >
-              <option value="">Sort by Name</option>
-              <option value="true">Voted</option>
-              <option value="false">Not Voted</option>
+              <option value="all">All Voters</option>
+              <option value="voted">Voted</option>
+              <option value="not-voted">Not Voted</option>
             </motion.select>
           </div>
         </div>
@@ -259,7 +257,7 @@ const ViewVoters = () => {
           </motion.div>
         )}
 
-        {!loading && !error && voters.length === 0 && (
+        {!loading && !error && filteredVoters.length === 0 && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
             variants={itemVariants}
@@ -267,7 +265,7 @@ const ViewVoters = () => {
             No voters available.
           </motion.div>
         )}
-        {!loading && !error && voters.length > 0 && (
+        {!loading && !error && filteredVoters.length > 0 && (
           <motion.div
             className="overflow-x-auto rounded-xl shadow-lg"
             variants={containerVariants}
@@ -295,7 +293,7 @@ const ViewVoters = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedVoters.map((voter, index) => (
+                {filteredVoters.map((voter, index) => (
                   <motion.tr
                     key={voter.id}
                     className={`border-b border-gray-200 ${
