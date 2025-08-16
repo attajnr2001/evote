@@ -287,16 +287,7 @@ const ViewVoters = () => {
                 <Description />
                 Export to Excel
               </motion.button>
-              <motion.button
-                onClick={handleResetVotes}
-                className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <Refresh />
-                Reset All Votes
-              </motion.button>
+
               <motion.select
                 onChange={(e) => handleFilterVoted(e.target.value)}
                 className="bg-violet-700 text-white py-2 px-4 rounded-full font-semibold hover:bg-violet-800 transition duration-300 shadow-md"
