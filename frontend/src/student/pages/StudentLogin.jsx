@@ -4,46 +4,15 @@ import schLogo from "/logo.jpg";
 
 const StudentLogin = () => {
   const [studentId, setStudentId] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(
+    "Voting has ended. You can no longer log in to vote."
+  );
+  const [loading] = useState(false);
   const navigate = useNavigate();
-  const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/students/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ indexNumber: studentId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // Store student ID in session storage
-      sessionStorage.setItem("studentId", data.student.id);
-
-      // Navigate to vote page
-      navigate("/student-vote");
-    } catch (err) {
-      if (err.message.includes("Failed to fetch")) {
-        setError(
-          "Cannot connect to the server. Please ensure the backend is running."
-        );
-      } else {
-        setError(err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
+  // Login is disabled since voting has ended
+  const handleLogin = () => {
+    setError("Voting has ended. You can no longer log in to vote.");
   };
 
   return (
@@ -82,14 +51,14 @@ const StudentLogin = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600"
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
-            disabled={loading}
+            disabled={true} // Input disabled since voting has ended
           />
         </div>
         <button
           type="button"
           onClick={handleLogin}
           className="w-full bg-violet-600 text-white py-3 px-4 rounded-lg hover:bg-violet-700 transition duration-300 disabled:bg-violet-400"
-          disabled={loading}
+          disabled={true} // Button disabled since voting has ended
         >
           {loading ? "Logging in..." : "Login"}
         </button>
