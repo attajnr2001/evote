@@ -143,7 +143,7 @@ const ViewVoters = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Voters");
 
-    // Set column widths (optional, for better readability)
+    // Set column widths for better readability
     worksheet["!cols"] = [
       { wch: 15 }, // Index Number
       { wch: 20 }, // Name
@@ -152,7 +152,7 @@ const ViewVoters = () => {
       { wch: 10 }, // Has Voted
     ];
 
-    XLSX.write(
+    XLSX.writeFile(
       workbook,
       `Voters_${new Date().toISOString().split("T")[0]}.xlsx`
     );
