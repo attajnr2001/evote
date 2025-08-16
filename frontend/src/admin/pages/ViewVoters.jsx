@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Person, PictureAsPdf, Refresh, Search } from "@mui/icons-material";
+import {
+  Person,
+  PictureAsPdf,
+  Refresh,
+  Search,
+  Description,
+} from "@mui/icons-material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import schLogo from "/logo.jpg";
 
 const ViewVoters = () => {
@@ -121,6 +128,34 @@ const ViewVoters = () => {
     });
 
     doc.save(`Voters_${new Date().toISOString().split("T")[0]}.pdf`);
+  };
+
+  const handleExportExcel = () => {
+    const worksheetData = filteredVoters.map((voter) => ({
+      "Index Number": voter.indexNumber,
+      Name: voter.name,
+      Class: voter.class,
+      Year: voter.year,
+      "Has Voted": voter.hasVoted ? "Yes" : "No",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Voters");
+
+    // Set column widths (optional, for better readability)
+    worksheet["!cols"] = [
+      { wch: 15 }, // Index Number
+      { wch: 20 }, // Name
+      { wch: 15 }, // Class
+      { wch: 10 }, // Year
+      { wch: 10 }, // Has Voted
+    ];
+
+    XLSX.write(
+      workbook,
+      `Voters_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
   };
 
   const handleFilterVoted = (value) => {
@@ -242,7 +277,17 @@ const ViewVoters = () => {
                 <PictureAsPdf />
                 Export to PDF
               </motion.button>
-              {/* <motion.button
+              <motion.button
+                onClick={handleExportExcel}
+                className="bg-green-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Description />
+                Export to Excel
+              </motion.button>
+              <motion.button
                 onClick={handleResetVotes}
                 className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
                 variants={buttonVariants}
@@ -251,7 +296,7 @@ const ViewVoters = () => {
               >
                 <Refresh />
                 Reset All Votes
-              </motion.button> */}
+              </motion.button>
               <motion.select
                 onChange={(e) => handleFilterVoted(e.target.value)}
                 className="bg-violet-700 text-white py-2 px-4 rounded-full font-semibold hover:bg-violet-800 transition duration-300 shadow-md"
