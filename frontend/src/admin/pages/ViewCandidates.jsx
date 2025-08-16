@@ -6,10 +6,12 @@ import {
   PictureAsPdf,
   Edit,
   Refresh,
+  Description,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import schLogo from "/logo.jpg";
 
 const positions = [
@@ -196,6 +198,38 @@ const ViewCandidates = () => {
     doc.save(`Candidates_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
+  const handleExportExcel = () => {
+    const worksheetData = Object.keys(candidates)
+      .sort((a, b) => positions.indexOf(a) - positions.indexOf(b))
+      .flatMap((position) =>
+        candidates[position].map((candidate) => ({
+          "ID Number": candidate.idNumber || "-",
+          Name: candidate.name,
+          Position: candidate.position,
+          Year: candidate.year || "-",
+          Votes: candidate.votes,
+        }))
+      );
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Candidates");
+
+    // Set column widths for better readability
+    worksheet["!cols"] = [
+      { wch: 15 }, // ID Number
+      { wch: 20 }, // Name
+      { wch: 20 }, // Position
+      { wch: 10 }, // Year
+      { wch: 10 }, // Votes
+    ];
+
+    XLSX.writeFile(
+      workbook,
+      `Candidates_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
   // Handle image click to open modal
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
@@ -301,6 +335,16 @@ const ViewCandidates = () => {
               Export to PDF
             </motion.button>
             <motion.button
+              onClick={handleExportExcel}
+              className="bg-green-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
+              <Description />
+              Export to Excel
+            </motion.button>
+            <motion.button
               onClick={handleResetVotes}
               className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
               variants={buttonVariants}
@@ -350,10 +394,10 @@ const ViewCandidates = () => {
             <table className="min-w-full bg-white rounded-xl border border-gray-200">
               <thead className="sticky top-0 bg-violet-700 text-white z-10">
                 <tr>
-                  <th className="py-4 px-6 text-left text-sm font-semibold w-[100px]">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[80px]">
                     Image
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold w-[120px]">
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[150px]">
                     ID Number
                   </th>
                   <th className="py-4 px-6 text-left text-sm font-semibold w-[200px]">
@@ -391,7 +435,9 @@ const ViewCandidates = () => {
                         src={`${BACKEND_URL}${candidate.image}`}
                         alt={candidate.name}
                         className="w-12 h-12 object-cover rounded-lg shadow-sm cursor-pointer"
-                        onClick={() => handleImageClick(`${BACKEND_URL}${candidate.image}`)}
+                        onClick={() =>
+                          handleImageClick(`${BACKEND_URL}${candidate.image}`)
+                        }
                         onError={(e) => {
                           console.error(
                             `Failed to load image for ${candidate.name}: ${BACKEND_URL}${candidate.image}`
@@ -463,7 +509,9 @@ const ViewCandidates = () => {
                 alt="Enlarged candidate"
                 className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
                 onError={(e) => {
-                  console.error(`Failed to load enlarged image: ${selectedImage}`);
+                  console.error(
+                    `Failed to load enlarged image: ${selectedImage}`
+                  );
                   e.target.src = "/placeholder.jpg";
                 }}
               />

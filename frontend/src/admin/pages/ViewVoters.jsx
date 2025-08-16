@@ -47,51 +47,6 @@ const ViewVoters = () => {
     fetchVoters();
   }, [BACKEND_URL]);
 
-  const handleResetVotes = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to reset all voter statuses? This action cannot be undone."
-      )
-    )
-      return;
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/admins/reset-votes`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to reset voter statuses");
-      }
-
-      const updatedResponse = await fetch(
-        `${BACKEND_URL}/api/admins/students`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const updatedData = await updatedResponse.json();
-
-      if (!updatedResponse.ok) {
-        throw new Error(updatedData.message || "Failed to refresh voters");
-      }
-
-      setVoters(updatedData);
-      alert("All voter statuses reset successfully");
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   const handleExportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
