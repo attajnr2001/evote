@@ -18,6 +18,7 @@ import EditCandidate from "./admin/pages/EditCandidate";
 import Turnout from "./admin/pages/Turnout";
 import AddVoter from "./admin/pages/AddVoter";
 import ViewVoters from "./admin/pages/ViewVoters";
+import Settings from "./admin/pages/Settings";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -34,6 +35,7 @@ const router = createBrowserRouter(
       <Route path="admin/edit-candidate/:id" element={<EditCandidate />} />
       <Route path="admin/turnout" element={<Turnout />} />
       <Route path="admin/add-voter" element={<AddVoter />} />
+      <Route path="admin/settings" element={<Settings />} />
     </Route>
   )
 );

@@ -6,6 +6,7 @@ const fs = require("fs");
 const Admin = require("../models/Admin");
 const Student = require("../models/Student");
 const Candidate = require("../models/Candidate");
+const xlsx = require("xlsx");
 const router = express.Router();
 
 const uploadsDir = path.join(__dirname, "../uploads");
@@ -102,7 +103,6 @@ router.post("/add-candidate", upload.single("image"), async (req, res) => {
     }
     res.status(500).json({
       message: "Server error",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });
@@ -344,6 +344,68 @@ router.get("/students", async (req, res) => {
   }
 });
 
+router.post("/students/delete", async (req, res) => {
+  try {
+    const { studentIds } = req.body;
+
+    // Validate input
+    if (!Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ message: "No student IDs provided" });
+    }
+
+    // Delete students by IDs
+    const result = await Student.deleteMany({ _id: { $in: studentIds } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "No students found to delete" });
+    }
+
+    res.status(200).json({
+      message: `Successfully deleted ${result.deletedCount} student(s)`,
+    });
+  } catch (error) {
+    console.error("Error deleting students:", error);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+
+router.post("/candidates/delete", async (req, res) => {
+  try {
+    console.log("Delete candidates request received");
+    console.log("Request body:", req.body);
+
+    const { candidateIds } = req.body;
+
+    // Validate input
+    if (!Array.isArray(candidateIds) || candidateIds.length === 0) {
+      return res.status(400).json({ message: "No candidate IDs provided" });
+    }
+
+    // Delete candidates by IDs
+    const result = await Candidate.deleteMany({ _id: { $in: candidateIds } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "No candidates found to delete" });
+    }
+
+    console.log("Candidates deleted:", result);
+
+    res.status(200).json({
+      message: `Successfully deleted ${result.deletedCount} candidate(s)`,
+    });
+  } catch (error) {
+    console.error("Delete candidates error:", error);
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+
 // Add voter route
 router.post("/add-voter", async (req, res) => {
   try {
@@ -378,6 +440,97 @@ router.post("/add-voter", async (req, res) => {
   } catch (error) {
     console.error("Error adding voter:", error);
     res.status(500).json({ message: error.message || "Server error" });
+  }
+});
+
+const storage2 = multer.memoryStorage();
+const upload2 = multer({
+  storage2,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-excel"
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only Excel files (.xlsx, .xls) are allowed"), false);
+    }
+  },
+});
+
+router.post("/add-voters", upload2.single("file"), async (req, res) => {
+  try {
+    console.log("Bulk add voters request received");
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Parse Excel file
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (data.length === 0) {
+      return res.status(400).json({ message: "Excel file is empty" });
+    }
+
+    const errors = [];
+    const addedVoters = [];
+    const skippedIndexNumbers = [];
+
+    for (const row of data) {
+      const name = row.name || row.Name || row.NAME;
+      const indexNumber = row.indexNumber || row.IndexNumber || row.INDEXNUMBER;
+      const studentClass = row.class || row.Class || row.CLASS;
+      const year = row.year || row.Year || row.YEAR;
+
+      // Validate row
+      if (!name || !indexNumber || !studentClass || !year) {
+        errors.push(`Missing data in row: ${JSON.stringify(row)}`);
+        continue;
+      }
+
+      // Check if student already exists
+      const existingStudent = await Student.findOne({ indexNumber });
+      if (existingStudent) {
+        skippedIndexNumbers.push(indexNumber);
+        continue;
+      }
+
+      // Create new student
+      const newStudent = new Student({
+        name: name.toString().trim(),
+        indexNumber: indexNumber.toString().trim(),
+        class: studentClass.toString().trim(),
+        year: year.toString().trim(),
+        hasVoted: false,
+      });
+
+      await newStudent.save();
+      addedVoters.push(indexNumber);
+    }
+
+    console.log("Bulk add voters result:", {
+      addedVoters,
+      skippedIndexNumbers,
+      errors,
+    });
+
+    res.status(201).json({
+      message: "Bulk voter addition completed",
+      addedCount: addedVoters.length,
+      skippedCount: skippedIndexNumbers.length,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error("Error adding bulk voters:", error);
+    res.status(error.message.includes("voting setup period") ? 403 : 500).json({
+      message: error.message || "Server error",
+    });
   }
 });
 

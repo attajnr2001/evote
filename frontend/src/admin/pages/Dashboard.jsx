@@ -8,6 +8,7 @@ import {
   EmojiEvents,
   Logout,
   PieChart,
+  SettingsAccessibility,
 } from "@mui/icons-material";
 import schLogo from "/logo.jpg";
 
@@ -83,6 +84,11 @@ const Dashboard = () => {
       title: "Show Turnout",
       icon: <PieChart className="text-orange-600" fontSize="large" />,
       route: "/admin/turnout",
+    },
+    {
+      title: "Settings",
+      icon: <SettingsAccessibility className="text-orange-600" fontSize="large" />,
+      route: "/admin/settings",
     },
   ];
 

@@ -5,6 +5,7 @@ const path = require("path");
 const connectDB = require("./config/db");
 const studentRoute = require("./routes/student");
 const adminRoute = require("./routes/admin");
+const settingsRoute = require("./routes/settings");
 
 const app = express();
 
@@ -28,6 +29,7 @@ connectDB();
 
 app.use("/api/students", studentRoute);
 app.use("/api/admins", adminRoute);
+app.use("/api/settings", settingsRoute);
 
 // Basic route
 app.get("/", (req, res) => {

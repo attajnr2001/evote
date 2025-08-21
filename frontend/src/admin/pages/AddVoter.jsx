@@ -1,8 +1,8 @@
-// DOCUMENT filename="AddVoter.jsx"
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { PersonAdd, Person } from "@mui/icons-material";
+import { PersonAdd, Person, UploadFile } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 import schLogo from "/logo.jpg";
 
 const AddVoter = () => {
@@ -14,8 +14,8 @@ const AddVoter = () => {
   });
   const [students, setStudents] = useState([]);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const [tableLoading, setTableLoading] = useState(true);
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
@@ -26,8 +26,10 @@ const AddVoter = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/admins/add-voter`, {
@@ -62,8 +64,68 @@ const AddVoter = () => {
       }
 
       setStudents(updatedData);
-      alert("Voter added successfully!");
+      setSuccess("Voter added successfully!");
       setFormData({ name: "", indexNumber: "", class: "", year: "" });
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setError("Please select an Excel file");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file); // Append the file to FormData with field name "file"
+
+      const response = await fetch(`${BACKEND_URL}/api/admins/add-voters`, {
+        method: "POST",
+        body: formData, // Send FormData instead of JSON
+        // Do NOT set Content-Type header; browser will set multipart/form-data automatically
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to add voters");
+      }
+
+      // Refresh student list
+      const updatedResponse = await fetch(
+        `${BACKEND_URL}/api/admins/students`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const updatedData = await updatedResponse.json();
+
+      if (!updatedResponse.ok) {
+        throw new Error(updatedData.message || "Failed to refresh students");
+      }
+
+      setStudents(updatedData);
+      setSuccess(
+        `Bulk upload completed: ${result.addedCount} voters added, ` +
+          `${result.skippedCount} skipped.` +
+          (result.errors ? ` Errors: ${result.errors.join("; ")}` : "")
+      );
+      setTimeout(() => setSuccess(""), 5000);
+      e.target.value = ""; // Reset file input
     } catch (err) {
       setError(err.message);
     } finally {
@@ -92,18 +154,13 @@ const AddVoter = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
-  const rowVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
-  };
-
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <motion.div
         className="w-full md:w-72 bg-violet-900 text-white p-6 flex flex-col items-center"
         variants={containerVariants}
-        initial="hiddenLife"
+        initial="hidden"
         animate="visible"
       >
         <motion.img
@@ -143,21 +200,39 @@ const AddVoter = () => {
           Add New Voter
         </motion.h1>
 
-        {/* Form */}
+        {/* Loading or Error State */}
+
+        {error && (
+          <motion.div
+            className="mb-4 text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg max-w-lg mx-auto"
+            variants={errorVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {error}
+          </motion.div>
+        )}
+        {success && (
+          <motion.div
+            className="mb-4 text-green-600 text-sm text-center bg-green-50 p-3 rounded-lg max-w-lg mx-auto"
+            variants={errorVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {success}
+          </motion.div>
+        )}
+
+        {/* Form and File Upload */}
+
         <motion.div
           className="max-w-lg mx-auto bg-white p-8 rounded-xl shadow-lg mb-12"
           variants={itemVariants}
         >
-          {error && (
-            <motion.div
-              className="mb-4 text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg"
-              variants={errorVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {error}
-            </motion.div>
-          )}
+          {/* Single Voter Form */}
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Add Single Voter
+          </h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-5">
               <label
@@ -237,7 +312,9 @@ const AddVoter = () => {
             </div>
             <motion.button
               type="submit"
-              className="w-full bg-violet-700 text-white py-3 px-4 rounded-full font-semibold text-lg hover:bg-violet-800 transition duration-300 shadow-md disabled:bg-violet-400 flex items-center justify-center gap-2"
+              className={`w-full bg-violet-700 text-white py-3 px-4 rounded-full font-semibold text-lg hover:bg-violet-800 transition duration-300 shadow-md disabled:bg-violet-400 flex items-center justify-center gap-2 ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               disabled={loading}
               variants={buttonVariants}
               whileHover="hover"
@@ -247,6 +324,30 @@ const AddVoter = () => {
               {loading ? "Adding Voter..." : "Add Voter"}
             </motion.button>
           </form>
+
+          {/* Bulk Upload Section */}
+          <h2 className="text-xl font-semibold text-gray-800 mt-8 mb-4">
+            Upload Voters from Excel
+          </h2>
+          <div className="mb-5">
+            <label
+              htmlFor="fileUpload"
+              className="block text-gray-800 text-sm font-semibold mb-2"
+            >
+              Upload Excel File
+            </label>
+            <input
+              type="file"
+              id="fileUpload"
+              accept=".xlsx, .xls"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition duration-200"
+              onChange={handleFileUpload}
+              disabled={loading}
+            />
+            <p className="text-gray-600 text-sm mt-2">
+              Excel file should have columns: name, indexNumber, class, year
+            </p>
+          </div>
         </motion.div>
 
         {/* Footer */}

@@ -6,6 +6,7 @@ import {
   Refresh,
   Search,
   Description,
+  Delete,
 } from "@mui/icons-material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -16,8 +17,11 @@ const ViewVoters = () => {
   const [voters, setVoters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filterVoted, setFilterVoted] = useState("all"); // "all", "voted", or "not-voted"
-  const [searchQuery, setSearchQuery] = useState(""); // State for search input
+  const [filterVoted, setFilterVoted] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedVoters, setSelectedVoters] = useState([]); // State for selected voter IDs
+  const [deleteLoading, setDeleteLoading] = useState(false); // State for deletion loading
+  const [deleteMessage, setDeleteMessage] = useState(""); // State for deletion feedback
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   useEffect(() => {
@@ -98,13 +102,12 @@ const ViewVoters = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Voters");
 
-    // Set column widths for better readability
     worksheet["!cols"] = [
-      { wch: 15 }, // Index Number
-      { wch: 20 }, // Name
-      { wch: 15 }, // Class
-      { wch: 10 }, // Year
-      { wch: 10 }, // Has Voted
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 10 },
     ];
 
     XLSX.writeFile(
@@ -115,10 +118,71 @@ const ViewVoters = () => {
 
   const handleFilterVoted = (value) => {
     setFilterVoted(value);
+    setSelectedVoters([]); // Reset selection when filter changes
   };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setSelectedVoters([]); // Reset selection when search changes
+  };
+
+  const handleSelectVoter = (voterId) => {
+    setSelectedVoters((prev) =>
+      prev.includes(voterId)
+        ? prev.filter((id) => id !== voterId)
+        : [...prev, voterId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedVoters.length === filteredVoters.length) {
+      setSelectedVoters([]);
+    } else {
+      setSelectedVoters(filteredVoters.map((voter) => voter.id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedVoters.length === 0) {
+      setDeleteMessage("No voters selected for deletion");
+      setTimeout(() => setDeleteMessage(""), 3000);
+      return;
+    }
+
+    setDeleteLoading(true);
+    setDeleteMessage("");
+
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/admins/students/delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ studentIds: selectedVoters }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete voters");
+      }
+
+      // Update voters list by removing deleted voters
+      setVoters((prev) =>
+        prev.filter((voter) => !selectedVoters.includes(voter.id))
+      );
+      setSelectedVoters([]);
+      setDeleteMessage(data.message);
+      setTimeout(() => setDeleteMessage(""), 3000);
+    } catch (err) {
+      setDeleteMessage(err.message);
+      setTimeout(() => setDeleteMessage(""), 3000);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const filteredVoters = voters
@@ -242,7 +306,21 @@ const ViewVoters = () => {
                 <Description />
                 Export to Excel
               </motion.button>
-
+              <motion.button
+                onClick={handleDeleteSelected}
+                className={`bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md ${
+                  deleteLoading || selectedVoters.length === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                disabled={deleteLoading || selectedVoters.length === 0}
+              >
+                <Delete />
+                Delete Selected
+              </motion.button>
               <motion.select
                 onChange={(e) => handleFilterVoted(e.target.value)}
                 className="bg-violet-700 text-white py-2 px-4 rounded-full font-semibold hover:bg-violet-800 transition duration-300 shadow-md"
@@ -275,7 +353,21 @@ const ViewVoters = () => {
             {error}
           </motion.div>
         )}
-
+        {deleteMessage && (
+          <motion.div
+            className={`text-center p-4 max-w-lg mx-auto rounded-lg ${
+              deleteMessage.includes("Failed") ||
+              deleteMessage.includes("No voters selected")
+                ? "text-red-600 bg-red-50"
+                : "text-green-600 bg-green-50"
+            }`}
+            variants={errorVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {deleteMessage}
+          </motion.div>
+        )}
         {!loading && !error && filteredVoters.length === 0 && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -294,6 +386,17 @@ const ViewVoters = () => {
             <table className="min-w-full bg-white rounded-xl border border-gray-200">
               <thead className="sticky top-0 bg-violet-700 text-white z-10">
                 <tr>
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[60px]">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedVoters.length === filteredVoters.length &&
+                        filteredVoters.length > 0
+                      }
+                      onChange={handleSelectAll}
+                      className="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300 rounded"
+                    />
+                  </th>
                   <th className="py-4 px-6 text-left text-sm font-semibold w-[120px]">
                     Index Number
                   </th>
@@ -324,6 +427,14 @@ const ViewVoters = () => {
                     whileHover={{ backgroundColor: "#f0fdf4" }}
                     transition={{ duration: 0.3 }}
                   >
+                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedVoters.includes(voter.id)}
+                        onChange={() => handleSelectVoter(voter.id)}
+                        className="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300 rounded"
+                      />
+                    </td>
                     <td className="py-4 px-6 text-gray-800 align-middle text-sm">
                       {voter.indexNumber}
                     </td>

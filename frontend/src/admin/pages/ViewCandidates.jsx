@@ -37,7 +37,10 @@ const ViewCandidates = () => {
   const [candidates, setCandidates] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null); // State for enlarged image
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedCandidates, setSelectedCandidates] = useState([]); // State for selected candidate IDs
+  const [deleteLoading, setDeleteLoading] = useState(false); // State for deletion loading
+  const [deleteMessage, setDeleteMessage] = useState(""); // State for deletion feedback
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
@@ -104,6 +107,7 @@ const ViewCandidates = () => {
       }
 
       setCandidates(updatedData);
+      setSelectedCandidates([]); // Reset selection after deletion
       alert("Candidate deleted successfully");
     } catch (err) {
       setError(err.message);
@@ -146,6 +150,7 @@ const ViewCandidates = () => {
       }
 
       setCandidates(updatedData);
+      setSelectedCandidates([]); // Reset selection after vote reset
       alert("All candidate votes reset successfully");
     } catch (err) {
       setError(err.message);
@@ -215,13 +220,12 @@ const ViewCandidates = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Candidates");
 
-    // Set column widths for better readability
     worksheet["!cols"] = [
-      { wch: 15 }, // ID Number
-      { wch: 20 }, // Name
-      { wch: 20 }, // Position
-      { wch: 10 }, // Year
-      { wch: 10 }, // Votes
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 10 },
+      { wch: 10 },
     ];
 
     XLSX.writeFile(
@@ -230,14 +234,88 @@ const ViewCandidates = () => {
     );
   };
 
-  // Handle image click to open modal
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
   };
 
-  // Close modal
   const handleCloseModal = () => {
     setSelectedImage(null);
+  };
+
+  const handleSelectCandidate = (candidateId) => {
+    setSelectedCandidates((prev) =>
+      prev.includes(candidateId)
+        ? prev.filter((id) => id !== candidateId)
+        : [...prev, candidateId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedCandidates.length === allCandidates.length) {
+      setSelectedCandidates([]);
+    } else {
+      setSelectedCandidates(allCandidates.map((candidate) => candidate.id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedCandidates.length === 0) {
+      setDeleteMessage("No candidates selected for deletion");
+      setTimeout(() => setDeleteMessage(""), 3000);
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedCandidates.length} candidate(s)?`
+      )
+    )
+      return;
+
+    setDeleteLoading(true);
+    setDeleteMessage("");
+
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/admins/candidates/delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ candidateIds: selectedCandidates }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete candidates");
+      }
+
+      const updatedResponse = await fetch(`${BACKEND_URL}/api/admins/results`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const updatedData = await updatedResponse.json();
+
+      if (!updatedResponse.ok) {
+        throw new Error(updatedData.message || "Failed to refresh candidates");
+      }
+
+      setCandidates(updatedData);
+      setSelectedCandidates([]);
+      setDeleteMessage(data.message);
+      setTimeout(() => setDeleteMessage(""), 3000);
+    } catch (err) {
+      setDeleteMessage(err.message);
+      setTimeout(() => setDeleteMessage(""), 3000);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const allCandidates = Object.keys(candidates)
@@ -315,7 +393,7 @@ const ViewCandidates = () => {
         initial="hidden"
         animate="visible"
       >
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <motion.h1
             className="text-4xl sm:text-5xl font-extrabold text-violet-900 tracking-tight flex items-center gap-2"
             variants={itemVariants}
@@ -323,37 +401,54 @@ const ViewCandidates = () => {
             <Person />
             Candidate List
           </motion.h1>
-          <div className="flex gap-4">
-            <motion.button
-              onClick={handleExportPDF}
-              className="bg-violet-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <PictureAsPdf />
-              Export to PDF
-            </motion.button>
-            <motion.button
-              onClick={handleExportExcel}
-              className="bg-green-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Description />
-              Export to Excel
-            </motion.button>
-            <motion.button
-              onClick={handleResetVotes}
-              className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Refresh />
-              Reset All Votes
-            </motion.button>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <div className="flex gap-4">
+              <motion.button
+                onClick={handleExportPDF}
+                className="bg-violet-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <PictureAsPdf />
+                Export to PDF
+              </motion.button>
+              <motion.button
+                onClick={handleExportExcel}
+                className="bg-green-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-green-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Description />
+                Export to Excel
+              </motion.button>
+              <motion.button
+                onClick={handleDeleteSelected}
+                className={`bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md ${
+                  deleteLoading || selectedCandidates.length === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                disabled={deleteLoading || selectedCandidates.length === 0}
+              >
+                <Delete />
+                Delete Selected
+              </motion.button>
+              <motion.button
+                onClick={handleResetVotes}
+                className="bg-red-700 text-white py-2 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-red-800 transition duration-300 shadow-md"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Refresh />
+                Reset All Votes
+              </motion.button>
+            </div>
           </div>
         </div>
 
@@ -375,7 +470,21 @@ const ViewCandidates = () => {
             {error}
           </motion.div>
         )}
-
+        {deleteMessage && (
+          <motion.div
+            className={`text-center p-4 max-w-lg mx-auto rounded-lg ${
+              deleteMessage.includes("Failed") ||
+              deleteMessage.includes("No candidates selected")
+                ? "text-red-600 bg-red-50"
+                : "text-green-600 bg-green-50"
+            }`}
+            variants={errorVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {deleteMessage}
+          </motion.div>
+        )}
         {!loading && !error && allCandidates.length === 0 && (
           <motion.div
             className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -394,6 +503,17 @@ const ViewCandidates = () => {
             <table className="min-w-full bg-white rounded-xl border border-gray-200">
               <thead className="sticky top-0 bg-violet-700 text-white z-10">
                 <tr>
+                  <th className="py-4 px-6 text-left text-sm font-semibold w-[60px]">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedCandidates.length === allCandidates.length &&
+                        allCandidates.length > 0
+                      }
+                      onChange={handleSelectAll}
+                      className="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300 rounded"
+                    />
+                  </th>
                   <th className="py-4 px-6 text-left text-sm font-semibold w-[80px]">
                     Image
                   </th>
@@ -430,6 +550,14 @@ const ViewCandidates = () => {
                     whileHover={{ backgroundColor: "#f0fdf4" }}
                     transition={{ duration: 0.3 }}
                   >
+                    <td className="py-4 px-6 text-gray-800 align-middle text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedCandidates.includes(candidate.id)}
+                        onChange={() => handleSelectCandidate(candidate.id)}
+                        className="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300 rounded"
+                      />
+                    </td>
                     <td className="py-4 px-6 align-middle">
                       <img
                         src={`${BACKEND_URL}${candidate.image}`}

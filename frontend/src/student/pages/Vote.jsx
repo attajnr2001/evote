@@ -26,36 +26,75 @@ const Vote = () => {
   const [selections, setSelections] = useState({});
   const [candidates, setCandidates] = useState({});
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isVotingPeriodActive, setIsVotingPeriodActive] = useState(false);
   const navigate = useNavigate();
   const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
 
   useEffect(() => {
-    const fetchCandidates = async () => {
+    const fetchSettingsAndCandidates = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/students/candidates`, {
+        // Fetch settings
+        const settingsResponse = await fetch(`${BACKEND_URL}/api/settings`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
         });
 
-        const data = await response.json();
+        const settingsData = await settingsResponse.json();
 
-        if (!response.ok) {
-          throw new Error(data.message || "Failed to fetch candidates");
+        if (!settingsResponse.ok) {
+          throw new Error(settingsData.message || "Failed to fetch settings");
         }
 
-        setCandidates(data);
+        if (settingsData.settings) {
+          const currentTime = new Date("2025-08-21T20:32:00Z"); // Fixed time for comparison
+          const startTime = new Date(settingsData.settings.startDateTime);
+          const endTime = new Date(settingsData.settings.endDateTime);
+
+          if (currentTime >= startTime && currentTime <= endTime) {
+            setIsVotingPeriodActive(true);
+          } else {
+            setError(
+              "Voting period is not in session. Come back later or contact admin."
+            );
+            setIsVotingPeriodActive(false);
+          }
+        } else {
+          setError("No voting settings found. Contact admin.");
+        }
+
+        // Fetch candidates
+        const candidatesResponse = await fetch(
+          `${BACKEND_URL}/api/students/candidates`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const candidatesData = await candidatesResponse.json();
+
+        if (!candidatesResponse.ok) {
+          throw new Error(
+            candidatesData.message || "Failed to fetch candidates"
+          );
+        }
+
+        setCandidates(candidatesData);
       } catch (err) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        setFetchLoading(false);
       }
     };
 
-    fetchCandidates();
+    fetchSettingsAndCandidates();
   }, [BACKEND_URL]);
 
   const handleSelection = (position, candidateId) => {
@@ -73,10 +112,24 @@ const Vote = () => {
   };
 
   const handleSubmit = () => {
+    if (!isVotingPeriodActive) {
+      setError(
+        "Voting period is not in session. Come back later or contact admin."
+      );
+      return;
+    }
     setShowConfirmDialog(true);
   };
 
   const handleConfirm = async () => {
+    if (!isVotingPeriodActive) {
+      setError(
+        "Voting period is not in session. Come back later or contact admin."
+      );
+      setShowConfirmDialog(false);
+      return;
+    }
+
     setShowConfirmDialog(false);
     setLoading(true);
     setError("");
@@ -205,12 +258,12 @@ const Vote = () => {
       </motion.div>
 
       {/* Error or Loading State */}
-      {loading && (
+      {fetchLoading && (
         <motion.div
           className="text-center p-4 text-gray-600 max-w-lg mx-auto"
           variants={itemVariants}
         >
-          Loading candidates...
+          Loading settings and candidates...
         </motion.div>
       )}
       {error && (
@@ -225,7 +278,7 @@ const Vote = () => {
       )}
 
       {/* Voting Sections */}
-      {!loading && !error && validPositions.length === 0 && (
+      {!fetchLoading && !error && validPositions.length === 0 && (
         <motion.div
           className="text-center p-4 text-gray-600 max-w-lg mx-auto"
           variants={itemVariants}
@@ -233,7 +286,7 @@ const Vote = () => {
           No candidates available for voting.
         </motion.div>
       )}
-      {!loading &&
+      {!fetchLoading &&
         !error &&
         validPositions.map((position, index) => (
           <motion.section
@@ -281,6 +334,7 @@ const Vote = () => {
                       checked={selections[position] === candidate.id}
                       onChange={() => handleSelection(position, candidate.id)}
                       className="h-5 w-5 text-violet-600 focus:ring-violet-500"
+                      disabled={!isVotingPeriodActive}
                     />
                     <span className="text-gray-700 text-sm font-medium">
                       Select
@@ -306,8 +360,12 @@ const Vote = () => {
             ) : (
               <motion.button
                 onClick={handleSubmit}
-                className="mt-8 bg-violet-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md"
-                disabled={loading}
+                className={`mt-8 bg-violet-700 text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:bg-violet-800 transition duration-300 shadow-md ${
+                  loading || !isVotingPeriodActive
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                disabled={loading || !isVotingPeriodActive}
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"
@@ -353,8 +411,12 @@ const Vote = () => {
               </motion.button>
               <motion.button
                 onClick={handleConfirm}
-                className="bg-violet-600 text-white py-2 px-4 rounded-lg hover:bg-violet-700 transition duration-300"
-                disabled={loading}
+                className={`bg-violet-600 text-white py-2 px-4 rounded-lg hover:bg-violet-700 transition duration-300 ${
+                  loading || !isVotingPeriodActive
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                disabled={loading || !isVotingPeriodActive}
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"

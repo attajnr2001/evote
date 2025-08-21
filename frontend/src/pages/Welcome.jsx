@@ -1,9 +1,68 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import schLogo from "/logo.jpg";
 
 const Welcome = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [votersAuthKey, setVotersAuthKey] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const BACKEND_URL = import.meta.env.VITE_ENDPOINT;
+
+  const handleStudentClick = async () => {
+    setShowModal(true);
+    setError("");
+    setVotersAuthKey("");
+  };
+
+  const handleModalSubmit = async () => {
+    if (!votersAuthKey.trim()) {
+      setError("Please enter the voters authentication key");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/settings`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch settings");
+      }
+
+      if (!data.settings || !data.settings.votersAuthKey) {
+        throw new Error("No voters authentication key found");
+      }
+
+      if (votersAuthKey === data.settings.votersAuthKey) {
+        setShowModal(false);
+        navigate("/student-login");
+      } else {
+        setError("Invalid voters authentication key");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setVotersAuthKey("");
+    setError("");
+  };
+
   // Animation variants for staggered entrance
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -31,6 +90,11 @@ const Welcome = () => {
       transition: { duration: 0.3 },
     },
     tap: { scale: 0.95 },
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
   };
 
   return (
@@ -87,14 +151,74 @@ const Welcome = () => {
           </Link>
         </motion.div>
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-          <Link
-            to="/student-login"
+          <button
+            onClick={handleStudentClick}
             className="flex items-center justify-center gap-2 bg-violet-700 text-white py-3 px-8 rounded-full font-semibold text-lg hover:bg-violet-800 transition duration-300 shadow-md"
           >
             <span>I am a Student</span>
-          </Link>
+          </button>
         </motion.div>
       </motion.div>
+
+      {/* Voters Auth Key Modal */}
+      {showModal && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          onClick={handleModalClose}
+        >
+          <motion.div
+            className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+            variants={modalVariants}
+          >
+            <h2 className="text-2xl font-bold text-violet-900 mb-4">
+              Enter Voters Authentication Key
+            </h2>
+            {error && (
+              <div className="mb-4 text-red-600 text-sm text-center">
+                {error}
+              </div>
+            )}
+            <div className="mb-4">
+              <label
+                htmlFor="votersAuthKey"
+                className="block text-gray-700 text-sm font-bold mb-2"
+              >
+                Authentication Key
+              </label>
+              <input
+                type="text"
+                id="votersAuthKey"
+                placeholder="Enter the voters auth key"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600"
+                value={votersAuthKey}
+                onChange={(e) => setVotersAuthKey(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={handleModalSubmit}
+                className={`flex-1 bg-violet-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-violet-700 transition duration-300 ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={loading}
+              >
+                {loading ? "Verifying..." : "Submit"}
+              </button>
+              <button
+                onClick={handleModalClose}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-400 transition duration-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Footer Section */}
       <motion.footer
