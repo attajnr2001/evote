@@ -8,7 +8,7 @@ const Student = require("../models/Student");
 const Candidate = require("../models/Candidate");
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, "../Uploads");
+const uploadsDir = path.join(__dirname, "../uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -27,6 +27,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
+    // Allow requests without files
     if (!file) {
       return cb(null, true);
     }
@@ -40,7 +41,70 @@ const upload = multer({
     }
     cb(new Error("Only JPEG/PNG images are allowed"));
   },
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
+
+router.post("/add-candidate", upload.single("image"), async (req, res) => {
+  try {
+    console.log("Add candidate request received");
+    console.log("Request body:", req.body);
+    console.log("File:", req.file);
+
+    const { idNumber, name, position, year } = req.body;
+
+    // Validate required fields
+    if (!idNumber || !name || !position || !year) {
+      return res
+        .status(400)
+        .json({ message: "ID number, name, position, and year are required" });
+    }
+
+    // Check for existing candidate
+    const existingCandidate = await Candidate.findOne({ idNumber, position });
+    if (existingCandidate) {
+      return res.status(400).json({
+        message: "Candidate already exists for this position",
+      });
+    }
+
+    // Create new candidate
+    const candidate = new Candidate({
+      idNumber,
+      name,
+      position,
+      year,
+      image: req.file ? `/uploads/${req.file.filename}` : null,
+      votes: 0,
+    });
+
+    await candidate.save();
+    console.log("Candidate created:", candidate);
+
+    res.status(201).json({
+      message: "Candidate added successfully",
+      candidate: {
+        id: candidate._id,
+        idNumber: candidate.idNumber,
+        name: candidate.name,
+        position: candidate.position,
+        year: candidate.year,
+        image: candidate.image,
+        votes: candidate.votes,
+      },
+    });
+  } catch (error) {
+    console.error("Add candidate error:", error);
+    if (error.message === "Only JPEG/PNG images are allowed") {
+      return res.status(400).json({ message: error.message });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({
+      message: "Server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
 });
 
 // Admin login route
@@ -131,38 +195,6 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-// Add candidate route
-router.post("/add-candidate", upload.single("image"), async (req, res) => {
-  try {
-    const { idNumber, name, position, year } = req.body;
-    const image = req.file;
-    if (!idNumber || !name || !position || !year || !image) {
-      return res
-        .status(400)
-        .json({ message: "All fields are required, including an image" });
-    }
-    const existingCandidate = await Candidate.findOne({ idNumber, position });
-    if (existingCandidate) {
-      return res
-        .status(400)
-        .json({ message: "Candidate already exists for this position" });
-    }
-    const newCandidate = new Candidate({
-      idNumber,
-      name,
-      position,
-      year,
-      image: `/Uploads/${image.filename}`,
-      votes: 0,
-    });
-    await newCandidate.save();
-    res.status(201).json({ message: "Candidate added successfully" });
-  } catch (error) {
-    console.error("Error adding candidate:", error);
-    res.status(500).json({ message: error.message || "Server error" });
-  }
-});
-
 // Fetch results route
 router.get("/results", async (req, res) => {
   try {
@@ -243,7 +275,7 @@ router.put("/update-candidate", upload.single("image"), async (req, res) => {
       if (fs.existsSync(oldImagePath)) {
         fs.unlinkSync(oldImagePath);
       }
-      candidate.image = `/Uploads/${image.filename}`;
+      candidate.image = `/uploads/${image.filename}`;
     }
     await candidate.save();
     res.status(200).json({ message: "Candidate updated successfully" });
