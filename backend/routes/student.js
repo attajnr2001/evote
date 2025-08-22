@@ -43,30 +43,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/candidates", async (req, res) => {
-  try {
-    const candidates = await Candidate.find().sort({ position: 1 });
-    const groupedCandidates = {};
-
-    // Group candidates by position
-    candidates.forEach((candidate) => {
-      if (!groupedCandidates[candidate.position]) {
-        groupedCandidates[candidate.position] = [];
-      }
-      groupedCandidates[candidate.position].push({
-        id: candidate._id,
-        name: candidate.name,
-        image: candidate.image,
-      });
-    });
-
-    res.status(200).json(groupedCandidates);
-  } catch (error) {
-    console.error("Error fetching candidates:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
 router.post("/vote", async (req, res) => {
   try {
     const { studentId, votes } = req.body;
@@ -79,7 +55,7 @@ router.post("/vote", async (req, res) => {
     }
 
     // Check if student exists and hasn't voted
-    const student = await Student.findById(studentId);
+    const student = await Student.findOne({ indexNumber: studentId });
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
@@ -107,6 +83,30 @@ router.post("/vote", async (req, res) => {
     res.status(200).json({ message: "Vote submitted successfully" });
   } catch (error) {
     console.error("Vote submission error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/candidates", async (req, res) => {
+  try {
+    const candidates = await Candidate.find().sort({ position: 1 });
+    const groupedCandidates = {};
+
+    // Group candidates by position
+    candidates.forEach((candidate) => {
+      if (!groupedCandidates[candidate.position]) {
+        groupedCandidates[candidate.position] = [];
+      }
+      groupedCandidates[candidate.position].push({
+        id: candidate._id,
+        name: candidate.name,
+        image: candidate.image,
+      });
+    });
+
+    res.status(200).json(groupedCandidates);
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

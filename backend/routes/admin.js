@@ -8,6 +8,7 @@ const Student = require("../models/Student");
 const Candidate = require("../models/Candidate");
 const xlsx = require("xlsx");
 const router = express.Router();
+const Position = require("../models/Position"); // Add Position model
 
 const uploadsDir = path.join(__dirname, "../uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -60,6 +61,12 @@ router.post("/add-candidate", upload.single("image"), async (req, res) => {
         .json({ message: "ID number, name, position, and year are required" });
     }
 
+    // Validate position exists
+    const validPosition = await Position.findOne({ name: position });
+    if (!validPosition) {
+      return res.status(400).json({ message: "Invalid position" });
+    }
+
     // Check for existing candidate
     const existingCandidate = await Candidate.findOne({ idNumber, position });
     if (existingCandidate) {
@@ -74,7 +81,7 @@ router.post("/add-candidate", upload.single("image"), async (req, res) => {
       name,
       position,
       year,
-      image: req.file ? `/uploads/${req.file.filename}` : null,
+      image: req.file ? `/Uploads/${req.file.filename}` : null,
       votes: 0,
     });
 
@@ -266,6 +273,11 @@ router.put("/update-candidate", upload.single("image"), async (req, res) => {
           "Another candidate already exists for this position with the same ID number",
       });
     }
+    // Validate position exists
+    const validPosition = await Position.findOne({ name: position });
+    if (!validPosition) {
+      return res.status(400).json({ message: "Invalid position" });
+    }
     candidate.idNumber = idNumber;
     candidate.name = name;
     candidate.position = position;
@@ -275,7 +287,7 @@ router.put("/update-candidate", upload.single("image"), async (req, res) => {
       if (fs.existsSync(oldImagePath)) {
         fs.unlinkSync(oldImagePath);
       }
-      candidate.image = `/uploads/${image.filename}`;
+      candidate.image = `/Uploads/${image.filename}`;
     }
     await candidate.save();
     res.status(200).json({ message: "Candidate updated successfully" });
@@ -531,6 +543,71 @@ router.post("/add-voters", upload2.single("file"), async (req, res) => {
     res.status(error.message.includes("voting setup period") ? 403 : 500).json({
       message: error.message || "Server error",
     });
+  }
+});
+
+// Add position route
+router.post("/add-position", async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Position name is required" });
+    }
+
+    const existingPosition = await Position.findOne({ name });
+    if (existingPosition) {
+      return res.status(400).json({ message: "Position already exists" });
+    }
+
+    const position = new Position({ name });
+    await position.save();
+
+    res.status(201).json({ message: "Position added successfully", position });
+  } catch (error) {
+    console.error("Error adding position:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Delete position route
+router.delete("/delete-position", async (req, res) => {
+  try {
+    const { positionId } = req.body;
+    if (!positionId) {
+      return res.status(400).json({ message: "Position ID is required" });
+    }
+
+    const position = await Position.findById(positionId);
+    if (!position) {
+      return res.status(404).json({ message: "Position not found" });
+    }
+
+    // Check if any candidates are associated with this position
+    const candidates = await Candidate.find({ position: position.name });
+    if (candidates.length > 0) {
+      return res.status(400).json({
+        message: "Cannot delete position with associated candidates",
+      });
+    }
+
+    await Position.deleteOne({ _id: positionId });
+    res.status(200).json({ message: "Position deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting position:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Fetch all positions route
+router.get("/positions", async (req, res) => {
+  try {
+    const positions = await Position.find().sort({ name: 1 });
+    res
+      .status(200)
+      .json(positions.map((pos) => ({ id: pos._id, name: pos.name })));
+  } catch (error) {
+    console.error("Error fetching positions:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

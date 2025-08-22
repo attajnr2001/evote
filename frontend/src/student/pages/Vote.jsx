@@ -3,28 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import schLogo from "/logo.jpg";
 
-const positions = [
-  "Head Boy",
-  "Head Girl",
-  "Compound Overseer Boy",
-  "Compound Overseer Girl",
-  "Dining Hall Boy",
-  "Dining Hall Girl",
-  "Entertainment Prefect Boy",
-  "Entertainment Prefect Girl",
-  "Library Prefect Boy",
-  "Library Prefect Girl",
-  "Prep Prefect Boy",
-  "Prep Prefect Girl",
-  "Utility Prefect Boy",
-  "Utility Prefect Girl",
-  "Sports Prefect Boy",
-  "Sports Prefect Girl",
-];
-
 const Vote = () => {
   const [selections, setSelections] = useState({});
   const [candidates, setCandidates] = useState({});
+  const [positions, setPositions] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -51,7 +33,7 @@ const Vote = () => {
         }
 
         if (settingsData.settings) {
-          const currentTime = new Date("2025-08-21T20:32:00Z"); // Fixed time for comparison
+          const currentTime = new Date(); // Use actual current time
           const startTime = new Date(settingsData.settings.startDateTime);
           const endTime = new Date(settingsData.settings.endDateTime);
 
@@ -66,6 +48,24 @@ const Vote = () => {
         } else {
           setError("No voting settings found. Contact admin.");
         }
+
+        // Fetch positions
+        const positionsResponse = await fetch(
+          `${BACKEND_URL}/api/admins/positions`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const positionsData = await positionsResponse.json();
+        if (!positionsResponse.ok) {
+          throw new Error(positionsData.message || "Failed to fetch positions");
+        }
+
+        setPositions(positionsData.map((pos) => pos.name));
 
         // Fetch candidates
         const candidatesResponse = await fetch(
@@ -105,7 +105,7 @@ const Vote = () => {
     const section = document.getElementById(sectionId);
     if (section) {
       window.scrollTo({
-        top: section.offsetTop - 80, // Adjusted for header
+        top: section.offsetTop - 80,
         behavior: "smooth",
       });
     }
@@ -168,12 +168,10 @@ const Vote = () => {
     setShowConfirmDialog(false);
   };
 
-  // Filter positions to only those with candidates, preserving order
   const validPositions = positions.filter(
     (position) => candidates[position]?.length > 0
   );
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -230,7 +228,6 @@ const Vote = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-violet-50">
-      {/* Header */}
       <motion.div
         className="text-center py-8 bg-violet-900 text-white"
         variants={containerVariants}
@@ -257,13 +254,12 @@ const Vote = () => {
         </motion.p>
       </motion.div>
 
-      {/* Error or Loading State */}
       {fetchLoading && (
         <motion.div
           className="text-center p-4 text-gray-600 max-w-lg mx-auto"
           variants={itemVariants}
         >
-          Loading settings and candidates...
+          Loading settings, positions, and candidates...
         </motion.div>
       )}
       {error && (
@@ -277,7 +273,6 @@ const Vote = () => {
         </motion.div>
       )}
 
-      {/* Voting Sections */}
       {!fetchLoading && !error && validPositions.length === 0 && (
         <motion.div
           className="text-center p-4 text-gray-600 max-w-lg mx-auto"
@@ -376,7 +371,6 @@ const Vote = () => {
           </motion.section>
         ))}
 
-      {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <motion.div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -428,7 +422,6 @@ const Vote = () => {
         </motion.div>
       )}
 
-      {/* Footer Section */}
       <motion.footer
         className="text-center py-8 text-gray-600 text-sm"
         variants={itemVariants}

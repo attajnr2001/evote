@@ -28,7 +28,7 @@ const StudentLogin = () => {
         }
 
         if (data.settings) {
-          const currentTime = new Date("2025-08-21T20:27:00Z"); // Fixed time for comparison
+          const currentTime = new Date(); // Use actual current time
           const startTime = new Date(data.settings.startDateTime);
           const endTime = new Date(data.settings.endDateTime);
 
@@ -77,7 +77,10 @@ const StudentLogin = () => {
         throw new Error(data.message || "Failed to login");
       }
 
-      // On success, navigate to voting page with student data
+      // Store studentId (indexNumber) in sessionStorage
+      sessionStorage.setItem("studentId", data.student.indexNumber);
+
+      // Navigate to voting page with student data
       navigate("/student-vote", { state: { student: data.student } });
     } catch (err) {
       setError(err.message);
